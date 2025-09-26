@@ -74,13 +74,12 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.UserCreateReques
 		modelUser := &model.UserEntityModel{
 			Context: ctx,
 			UserEntity: model.UserEntity{
-				Name:      payload.Name,
-				Email:     payload.Email,
-				Password:  string(hashedPassword),
-				RoleId:    payload.RoleId,
-				IsDelete:  false,
-				IsLocked:  false,
-				LoginFrom: "",
+				Name:     payload.Name,
+				Email:    payload.Email,
+				Password: string(hashedPassword),
+				RoleId:   payload.RoleId,
+				IsDelete: false,
+				IsLocked: false,
 			},
 		}
 		if err = s.UserRepository.Create(ctx, modelUser).Error; err != nil {
@@ -127,7 +126,6 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			"email":      v.Email,
 			"is_delete":  v.IsDelete,
 			"is_locked":  v.IsLocked,
-			"login_from": v.LoginFrom,
 			"created_at": general.FormatWithZWithoutChangingTime(v.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
 			"role": map[string]interface{}{
@@ -155,7 +153,6 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.UserFindByIDRe
 			"email":      data.Email,
 			"is_delete":  data.IsDelete,
 			"is_locked":  data.IsLocked,
-			"login_from": data.LoginFrom,
 			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 			"role": map[string]interface{}{
@@ -425,7 +422,6 @@ func (s *service) GetUserInfo(ctx *abstraction.Context) (map[string]interface{},
 			"email":      data.Email,
 			"is_delete":  data.IsDelete,
 			"is_locked":  data.IsLocked,
-			"login_from": data.LoginFrom,
 			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 			"role": map[string]interface{}{
@@ -459,8 +455,7 @@ func (s *service) Export(ctx *abstraction.Context) (string, *bytes.Buffer, error
 	f.SetCellValue(sheet, "C1", "Email")
 	f.SetCellValue(sheet, "D1", "Role")
 	f.SetCellValue(sheet, "E1", "Status Akun")
-	f.SetCellValue(sheet, "F1", "Login Terbaru")
-	f.SetCellValue(sheet, "G1", "Tanggal Dibuat")
+	f.SetCellValue(sheet, "F1", "Tanggal Dibuat")
 	for i, v := range data {
 		colA := fmt.Sprintf("A%d", i+2)
 		colB := fmt.Sprintf("B%d", i+2)
@@ -468,7 +463,6 @@ func (s *service) Export(ctx *abstraction.Context) (string, *bytes.Buffer, error
 		colD := fmt.Sprintf("D%d", i+2)
 		colE := fmt.Sprintf("E%d", i+2)
 		colF := fmt.Sprintf("F%d", i+2)
-		colG := fmt.Sprintf("G%d", i+2)
 		no := i + 1
 		f.SetCellValue(sheet, colA, no)
 		f.SetCellValue(sheet, colB, v.Name)
@@ -479,12 +473,7 @@ func (s *service) Export(ctx *abstraction.Context) (string, *bytes.Buffer, error
 		} else {
 			f.SetCellValue(sheet, colE, "Tidak Terkunci")
 		}
-		if v.LoginFrom != "" {
-			f.SetCellValue(sheet, colF, general.CapitalizeEachWord(v.LoginFrom))
-		} else {
-			f.SetCellValue(sheet, colF, "-")
-		}
-		f.SetCellValue(sheet, colG, v.CreatedAt.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheet, colF, v.CreatedAt.Format("2006-01-02 15:04:05"))
 	}
 
 	var buf bytes.Buffer
