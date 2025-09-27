@@ -30,7 +30,7 @@ import (
 
 type Service interface {
 	Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest) (map[string]interface{}, error)
-	Logout(ctx *abstraction.Context, payload *dto.AuthLogoutRequest) (map[string]interface{}, error)
+	Logout(ctx *abstraction.Context) (map[string]interface{}, error)
 	RefreshToken(ctx *abstraction.Context) (map[string]interface{}, error)
 	SendEmailForgotPassword(ctx *abstraction.Context, payload *dto.AuthSendEmailForgotPasswordRequest) (map[string]interface{}, error)
 	ValidationResetPassword(ctx *abstraction.Context, payload *dto.AuthValidationResetPasswordRequest) (string, error)
@@ -64,16 +64,16 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		token string
 	)
 	if err := trxmanager.New(s.DB).WithTrx(ctx, func(ctx *abstraction.Context) error {
-		data, err = s.UserRepository.FindByEmail(ctx, payload.Email)
+		data, err = s.UserRepository.FindByNumberId(ctx, payload.NumberId)
 		if err != nil && err.Error() != "record not found" {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 		if data == nil {
-			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "email or password is incorrect")
+			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
 		if err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(payload.Password)); err != nil {
-			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "email or password is incorrect")
+			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
 		if data.IsLocked {
@@ -116,6 +116,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		"token": token,
 		"data": map[string]interface{}{
 			"id":         data.ID,
+			"number_id":  data.NumberId,
 			"name":       data.Name,
 			"email":      data.Email,
 			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
@@ -128,7 +129,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 	}, nil
 }
 
-func (s *service) Logout(ctx *abstraction.Context, payload *dto.AuthLogoutRequest) (map[string]interface{}, error) {
+func (s *service) Logout(ctx *abstraction.Context) (map[string]interface{}, error) {
 	if err := trxmanager.New(s.DB).WithTrx(ctx, func(ctx *abstraction.Context) error {
 
 		general.RemoveUUIDFromRedisArray(s.DbRedis, general.GenerateRedisKeyUserLogin(ctx.Auth.ID), ctx.Auth.UuidLogin)
@@ -206,7 +207,7 @@ func (s *service) SendEmailForgotPassword(ctx *abstraction.Context, payload *dto
 
 		s.DbRedis.Set(context.Background(), *token, *token, 0)
 
-		if err = gomail.SendMail(data.Email, "Forgot Password for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
+		if err = gomail.SendMail(data.Email, "Forgot Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
 			NAME  string
 			EMAIL string
 			LINK  string
@@ -273,16 +274,16 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		if err = gomail.SendMail(userData.Email, "Reset Password for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
+		if err = gomail.SendMail(userData.Email, "Reset Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
 			NAME      string
 			RESETNAME string
-			EMAIL     string
+			NUMBERID  string
 			PASSWORD  string
 			LINK      string
 		}{
 			NAME:      userData.Name,
 			RESETNAME: "System",
-			EMAIL:     userData.Email,
+			NUMBERID:  userData.Email,
 			PASSWORD:  passwordString,
 			LINK:      constant.BASE_URL,
 		})); err != nil {

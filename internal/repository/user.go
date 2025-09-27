@@ -9,6 +9,7 @@ import (
 )
 
 type User interface {
+	FindByNumberId(ctx *abstraction.Context, numberId string) (*model.UserEntityModel, error)
 	FindByEmail(ctx *abstraction.Context, email string) (*model.UserEntityModel, error)
 	Create(ctx *abstraction.Context, data *model.UserEntityModel) *gorm.DB
 	Find(ctx *abstraction.Context, no_paging bool) (data []*model.UserEntityModel, err error)
@@ -31,6 +32,21 @@ func NewUser(db *gorm.DB) *user {
 			Db: db,
 		},
 	}
+}
+
+func (r *user) FindByNumberId(ctx *abstraction.Context, numberId string) (*model.UserEntityModel, error) {
+	conn := r.CheckTrx(ctx)
+
+	var data model.UserEntityModel
+	err := conn.
+		Where("LOWER(number_id) = LOWER(?) AND is_delete = ?", numberId, false).
+		Preload("Role").
+		First(&data).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }
 
 func (r *user) FindByEmail(ctx *abstraction.Context, email string) (*model.UserEntityModel, error) {
