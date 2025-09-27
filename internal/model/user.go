@@ -13,7 +13,6 @@ type UserEntity struct {
 	Password string `json:"password"`
 	RoleId   int    `json:"role_id"`
 	IsDelete bool   `json:"is_delete"`
-	IsLocked bool   `json:"is_locked"`
 }
 
 // UserEntityModel ...

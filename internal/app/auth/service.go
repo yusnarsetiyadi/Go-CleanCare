@@ -76,10 +76,6 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
-		if data.IsLocked {
-			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "this account is locked")
-		}
-
 		var encryptedUserID string
 		if encryptedUserID, err = s.encryptTokenClaims(data.ID); err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")

@@ -79,7 +79,6 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.UserCreateReques
 				Password: string(hashedPassword),
 				RoleId:   payload.RoleId,
 				IsDelete: false,
-				IsLocked: false,
 			},
 		}
 		if err = s.UserRepository.Create(ctx, modelUser).Error; err != nil {
@@ -125,7 +124,6 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			"name":       v.Name,
 			"email":      v.Email,
 			"is_delete":  v.IsDelete,
-			"is_locked":  v.IsLocked,
 			"created_at": general.FormatWithZWithoutChangingTime(v.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
 			"role": map[string]interface{}{
@@ -152,7 +150,6 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.UserFindByIDRe
 			"name":       data.Name,
 			"email":      data.Email,
 			"is_delete":  data.IsDelete,
-			"is_locked":  data.IsLocked,
 			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 			"role": map[string]interface{}{
@@ -196,49 +193,9 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateReques
 		if payload.RoleId != nil {
 			newUserData.RoleId = *payload.RoleId
 		}
-		if payload.IsLocked != nil {
-			newUserData.IsLocked = *payload.IsLocked
-			if err = s.UserRepository.UpdateLocked(ctx, newUserData).Error; err != nil {
-				return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-			}
-		}
 
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-		}
-
-		if payload.IsLocked != nil {
-			if *payload.IsLocked {
-				if err = gomail.SendMail(userData.Email, "Account Locked for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_locked_user.html", struct {
-					NAME  string
-					EMAIL string
-				}{
-					NAME:  userData.Name,
-					EMAIL: userData.Email,
-				})); err != nil {
-					return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-				}
-
-				userLoginFrom := general.GetRedisUUIDArray(s.DbRedis, general.GenerateRedisKeyUserLogin(userData.ID))
-				for _, v := range userLoginFrom {
-					general.AppendUUIDToRedisArray(s.DbRedis, constant.REDIS_KEY_AUTO_LOGOUT, v)
-				}
-			} else {
-				if err = gomail.SendMail(userData.Email, "Account Unlocked for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_unlocked_user.html", struct {
-					NAME  string
-					EMAIL string
-				}{
-					NAME:  userData.Name,
-					EMAIL: userData.Email,
-				})); err != nil {
-					return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-				}
-
-				userLoginFrom := general.GetRedisUUIDArray(s.DbRedis, general.GenerateRedisKeyUserLogin(userData.ID))
-				for _, v := range userLoginFrom {
-					general.RemoveUUIDFromRedisArray(s.DbRedis, constant.REDIS_KEY_AUTO_LOGOUT, v)
-				}
-			}
 		}
 
 		return nil
@@ -421,7 +378,6 @@ func (s *service) GetUserInfo(ctx *abstraction.Context) (map[string]interface{},
 			"name":       data.Name,
 			"email":      data.Email,
 			"is_delete":  data.IsDelete,
-			"is_locked":  data.IsLocked,
 			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
 			"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 			"role": map[string]interface{}{
@@ -454,26 +410,19 @@ func (s *service) Export(ctx *abstraction.Context) (string, *bytes.Buffer, error
 	f.SetCellValue(sheet, "B1", "Nama")
 	f.SetCellValue(sheet, "C1", "Email")
 	f.SetCellValue(sheet, "D1", "Role")
-	f.SetCellValue(sheet, "E1", "Status Akun")
-	f.SetCellValue(sheet, "F1", "Tanggal Dibuat")
+	f.SetCellValue(sheet, "E1", "Tanggal Dibuat")
 	for i, v := range data {
 		colA := fmt.Sprintf("A%d", i+2)
 		colB := fmt.Sprintf("B%d", i+2)
 		colC := fmt.Sprintf("C%d", i+2)
 		colD := fmt.Sprintf("D%d", i+2)
 		colE := fmt.Sprintf("E%d", i+2)
-		colF := fmt.Sprintf("F%d", i+2)
 		no := i + 1
 		f.SetCellValue(sheet, colA, no)
 		f.SetCellValue(sheet, colB, v.Name)
 		f.SetCellValue(sheet, colC, v.Email)
 		f.SetCellValue(sheet, colD, v.Role.Name)
-		if v.IsLocked {
-			f.SetCellValue(sheet, colE, "Terkunci")
-		} else {
-			f.SetCellValue(sheet, colE, "Tidak Terkunci")
-		}
-		f.SetCellValue(sheet, colF, v.CreatedAt.Format("2006-01-02 15:04:05"))
+		f.SetCellValue(sheet, colE, v.CreatedAt.Format("2006-01-02 15:04:05"))
 	}
 
 	var buf bytes.Buffer

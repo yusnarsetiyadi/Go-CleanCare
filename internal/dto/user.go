@@ -1,9 +1,10 @@
 package dto
 
 type UserCreateRequest struct {
-	Name   string `json:"name" form:"name" validate:"required"`
-	Email  string `json:"email" form:"email" validate:"required"`
-	RoleId int    `json:"role_id" form:"role_id" validate:"required"`
+	Name     string `json:"name" form:"name" validate:"required"`
+	NumberId string `json:"number_id" form:"number_id" validate:"required"`
+	Email    string `json:"email" form:"email" validate:"required"`
+	RoleId   int    `json:"role_id" form:"role_id" validate:"required"`
 }
 
 type UserFindByIDRequest struct {
@@ -11,11 +12,10 @@ type UserFindByIDRequest struct {
 }
 
 type UserUpdateRequest struct {
-	ID       int     `param:"id" validate:"required"`
-	Name     *string `json:"name" form:"name"`
-	Email    *string `json:"email" form:"email"`
-	RoleId   *int    `json:"role_id" form:"role_id"`
-	IsLocked *bool   `json:"is_locked" form:"is_locked"`
+	ID     int     `param:"id" validate:"required"`
+	Name   *string `json:"name" form:"name"`
+	Email  *string `json:"email" form:"email"`
+	RoleId *int    `json:"role_id" form:"role_id"`
 }
 
 type UserDeleteByIDRequest struct {
