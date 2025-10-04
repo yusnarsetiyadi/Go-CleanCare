@@ -72,7 +72,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
-		if err = bcrypt.CompareHashAndPassword([]byte(data.Password), []byte(payload.Password)); err != nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(*data.Password), []byte(payload.Password)); err != nil {
 			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
@@ -84,7 +84,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		if encryptedUserRoleID, err = s.encryptTokenClaims(data.RoleId); err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		encodedEmail := encoding.Encode(data.Email)
+		encodedEmail := encoding.Encode(*data.Email)
 		uuidUserLogin := uuid.NewString()
 		encodedUuidLogin := encoding.Encode(uuidUserLogin)
 
@@ -157,7 +157,7 @@ func (s *service) RefreshToken(ctx *abstraction.Context) (map[string]interface{}
 		if encryptedUserRoleID, err = s.encryptTokenClaims(data.RoleId); err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		encodedEmail := encoding.Encode(data.Email)
+		encodedEmail := encoding.Encode(*data.Email)
 		encodedUuidLogin := encoding.Encode(ctx.Auth.UuidLogin)
 
 		tokenClaims := &modelToken.TokenClaims{
@@ -203,13 +203,13 @@ func (s *service) SendEmailForgotPassword(ctx *abstraction.Context, payload *dto
 
 		s.DbRedis.Set(context.Background(), *token, *token, 0)
 
-		if err = gomail.SendMail(data.Email, "Forgot Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
+		if err = gomail.SendMail(*data.Email, "Forgot Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
 			NAME  string
 			EMAIL string
 			LINK  string
 		}{
 			NAME:  data.Name,
-			EMAIL: data.Email,
+			EMAIL: *data.Email,
 			LINK:  constant.BASE_URL + "/auth/validation/reset-password/" + *token,
 		})); err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
@@ -264,13 +264,13 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 		newUserData := new(model.UserEntityModel)
 		newUserData.Context = ctx
 		newUserData.ID = userData.ID
-		newUserData.Password = string(hashedPassword)
+		*newUserData.Password = string(hashedPassword)
 
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		if err = gomail.SendMail(userData.Email, "Reset Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
+		if err = gomail.SendMail(*userData.Email, "Reset Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
 			NAME      string
 			RESETNAME string
 			NUMBERID  string
@@ -279,7 +279,7 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 		}{
 			NAME:      userData.Name,
 			RESETNAME: "System",
-			NUMBERID:  userData.Email,
+			NUMBERID:  *userData.Email,
 			PASSWORD:  passwordString,
 			LINK:      constant.BASE_URL,
 		})); err != nil {
@@ -296,5 +296,5 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 		return "", err
 	}
 
-	return userData.Email, nil
+	return *userData.Email, nil
 }

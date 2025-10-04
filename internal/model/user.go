@@ -7,12 +7,14 @@ import (
 )
 
 type UserEntity struct {
-	NumberId string `json:"number_id"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	RoleId   int    `json:"role_id"`
-	IsDelete bool   `json:"is_delete"`
+	NumberId    string  `json:"number_id"`
+	Name        string  `json:"name"`
+	Email       *string `json:"email"`
+	Password    *string `json:"password"`
+	RoleId      int     `json:"role_id"`
+	IsDelete    bool    `json:"is_delete"`
+	Profile     *string `json:"profile"`
+	ProfileName *string `json:"profile_name"`
 }
 
 // UserEntityModel ...

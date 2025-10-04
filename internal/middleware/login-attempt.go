@@ -361,7 +361,7 @@ func (store *LoginAttemptMemoryStore) IncreaseAttempt(c echo.Context, identifier
 					EMAIL string
 				}{
 					NAME:  userEntityModel.Name,
-					EMAIL: userEntityModel.Email,
+					EMAIL: *userEntityModel.Email,
 				}))
 				user.Locked = true
 			default:

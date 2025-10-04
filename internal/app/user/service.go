@@ -70,13 +70,14 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.UserCreateReques
 		if err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
+		hashedPasswordStr := string(hashedPassword)
 
 		modelUser := &model.UserEntityModel{
 			Context: ctx,
 			UserEntity: model.UserEntity{
 				Name:     payload.Name,
-				Email:    payload.Email,
-				Password: string(hashedPassword),
+				Email:    &payload.Email,
+				Password: &hashedPasswordStr,
 				RoleId:   payload.RoleId,
 				IsDelete: false,
 			},
@@ -185,10 +186,10 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateReques
 			if err != nil && err.Error() != "record not found" {
 				return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 			}
-			if userEmail != nil && userEmail.Email != *payload.Email {
+			if userEmail != nil && userEmail.Email != payload.Email {
 				return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "email already exist")
 			}
-			newUserData.Email = *payload.Email
+			newUserData.Email = payload.Email
 		}
 		if payload.RoleId != nil {
 			newUserData.RoleId = *payload.RoleId
@@ -259,7 +260,7 @@ func (s *service) ChangePassword(ctx *abstraction.Context, payload *dto.UserChan
 			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "user not found")
 		}
 
-		if err = bcrypt.CompareHashAndPassword([]byte(userData.Password), []byte(payload.OldPassword)); err != nil {
+		if err = bcrypt.CompareHashAndPassword([]byte(*userData.Password), []byte(payload.OldPassword)); err != nil {
 			return response.ErrorBuilder(http.StatusBadRequest, err, "old password is wrong")
 		}
 
@@ -275,7 +276,7 @@ func (s *service) ChangePassword(ctx *abstraction.Context, payload *dto.UserChan
 		newUserData := new(model.UserEntityModel)
 		newUserData.Context = ctx
 		newUserData.ID = userData.ID
-		newUserData.Password = string(hashedPassword)
+		*newUserData.Password = string(hashedPassword)
 
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
@@ -330,13 +331,13 @@ func (s *service) ResetPassword(ctx *abstraction.Context, payload *dto.UserReset
 		newUserData := new(model.UserEntityModel)
 		newUserData.Context = ctx
 		newUserData.ID = userData.ID
-		newUserData.Password = string(hashedPassword)
+		*newUserData.Password = string(hashedPassword)
 
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		if err = gomail.SendMail(userData.Email, "Reset Password for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
+		if err = gomail.SendMail(*userData.Email, "Reset Password for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
 			NAME      string
 			RESETNAME string
 			EMAIL     string
@@ -345,7 +346,7 @@ func (s *service) ResetPassword(ctx *abstraction.Context, payload *dto.UserReset
 		}{
 			NAME:      userData.Name,
 			RESETNAME: userLogin.Name,
-			EMAIL:     userData.Email,
+			EMAIL:     *userData.Email,
 			PASSWORD:  passwordString,
 			LINK:      constant.BASE_URL,
 		})); err != nil {
