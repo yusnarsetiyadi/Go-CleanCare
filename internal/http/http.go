@@ -6,6 +6,7 @@ import (
 
 	"iss_cleancare/internal/app/auth"
 	"iss_cleancare/internal/app/role"
+	"iss_cleancare/internal/app/test"
 	user "iss_cleancare/internal/app/user"
 	"iss_cleancare/internal/config"
 	"iss_cleancare/internal/factory"
@@ -28,6 +29,7 @@ func Init(e *echo.Echo, f *factory.Factory) {
 	e.Static("/share", constant.PATH_SHARE)
 	e.Static("/file_saved", constant.PATH_FILE_SAVED)
 
+	test.NewHandler(f).Route(e.Group("/test"))
 	auth.NewHandler(f).Route(e.Group("/auth"))
 	user.NewHandler(f).Route(e.Group("/user"))
 	role.NewHandler(f).Route(e.Group("/role"))

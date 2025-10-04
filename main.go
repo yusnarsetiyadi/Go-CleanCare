@@ -49,7 +49,7 @@ func main() {
 	ws.InitCentrifugal(ctx, e, f)
 
 	go func() {
-		runNgrok := true
+		runNgrok := false
 		addr := ""
 		if runNgrok {
 			listener := ngrok.Run()

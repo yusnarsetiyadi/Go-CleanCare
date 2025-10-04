@@ -12,6 +12,7 @@ import (
 	modelToken "iss_cleancare/internal/model/token"
 	"iss_cleancare/internal/repository"
 	"iss_cleancare/pkg/constant"
+	"iss_cleancare/pkg/gdrive"
 	"iss_cleancare/pkg/gomail"
 	"iss_cleancare/pkg/util/aescrypt"
 	"iss_cleancare/pkg/util/encoding"
@@ -25,6 +26,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/api/drive/v3"
 	"gorm.io/gorm"
 )
 
@@ -41,6 +43,8 @@ type service struct {
 
 	DB      *gorm.DB
 	DbRedis *redis.Client
+	sDrive  *drive.Service
+	fDrive  *drive.File
 }
 
 func NewService(f *factory.Factory) Service {
@@ -49,6 +53,8 @@ func NewService(f *factory.Factory) Service {
 
 		DB:      f.Db,
 		DbRedis: f.DbRedis,
+		sDrive:  f.GDrive.Service,
+		fDrive:  f.GDrive.FolderIss,
 	}
 }
 
@@ -108,21 +114,40 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		return nil, err
 	}
 
-	return map[string]interface{}{
+	dataReturn := map[string]interface{}{
 		"token": token,
 		"data": map[string]interface{}{
-			"id":         data.ID,
-			"number_id":  data.NumberId,
-			"name":       data.Name,
-			"email":      data.Email,
-			"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
-			"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
+			"id":           data.ID,
+			"number_id":    data.NumberId,
+			"name":         data.Name,
+			"email":        data.Email,
+			"created_at":   general.FormatWithZWithoutChangingTime(data.CreatedAt),
+			"updated_at":   general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
+			"profile":      data.Profile,
+			"profile_name": data.ProfileName,
 			"role": map[string]interface{}{
 				"id":   data.Role.ID,
 				"name": data.Role.Name,
 			},
 		},
-	}, nil
+	}
+
+	if data.Profile != nil {
+		profile, err := gdrive.GetFile(s.sDrive, *data.Profile)
+		if err != nil {
+			return nil, response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "profile not found")
+		}
+		dataReturn["profile"] = map[string]interface{}{
+			// "view_saved": general.ConvertLinkToFileSaved(profile.WebContentLink, profile.Name, profile.FileExtension),
+			"view":    "https://lh3.googleusercontent.com/d/" + *data.Profile,
+			"content": profile.WebContentLink,
+			"ext":     profile.FileExtension,
+			"name":    profile.Name,
+			"id":      profile.Id,
+		}
+	}
+
+	return dataReturn, nil
 }
 
 func (s *service) Logout(ctx *abstraction.Context) (map[string]interface{}, error) {
