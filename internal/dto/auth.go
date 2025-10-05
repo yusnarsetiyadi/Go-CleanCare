@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"iss_cleancare/internal/config"
 	modeltoken "iss_cleancare/internal/model/token"
+	"mime/multipart"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -53,4 +54,15 @@ type AuthSendEmailForgotPasswordRequest struct {
 
 type AuthValidationResetPasswordRequest struct {
 	Token string `param:"token" validate:"required"`
+}
+
+type AuthVerifyNumberRequest struct {
+	NumberId string `json:"number_id" form:"number_id" validate:"required"`
+}
+
+type AuthRegisterRequest struct {
+	NumberId string  `json:"number_id" form:"number_id" validate:"required"`
+	Email    *string `json:"email" form:"email"`
+	Password *string `json:"password" form:"password"`
+	Profile  []*multipart.FileHeader
 }

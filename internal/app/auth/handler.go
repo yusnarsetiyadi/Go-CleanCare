@@ -7,6 +7,7 @@ import (
 	"iss_cleancare/pkg/util/general"
 	"iss_cleancare/pkg/util/response"
 	"net/http"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -82,4 +83,44 @@ func (h *handler) ValidationResetPassword(c echo.Context) error {
 	}
 	htmlContent := general.ProcessHTMLResponseEmail("assets/html/webview/reset_password_success.html", "{{.Data}}", data)
 	return c.HTML(200, htmlContent)
+}
+
+func (h *handler) VerifyNumber(c echo.Context) error {
+	payload := new(dto.AuthVerifyNumberRequest)
+	if err := c.Bind(payload); err != nil {
+		return response.ErrorBuilder(http.StatusBadRequest, err, "error bind payload").SendError(c)
+	}
+	if err := c.Validate(payload); err != nil {
+		return response.ErrorBuilder(http.StatusBadRequest, err, "error validate payload").SendError(c)
+	}
+	data, err := h.service.VerifyNumber(c.(*abstraction.Context), payload)
+	if err != nil {
+		return response.ErrorResponse(err).SendError(c)
+	}
+	return response.SuccessResponse(data).SendSuccess(c)
+}
+
+func (h *handler) Register(c echo.Context) error {
+	payload := new(dto.AuthRegisterRequest)
+
+	if err := c.Bind(payload); err != nil {
+		return response.ErrorBuilder(http.StatusBadRequest, err, "error bind payload").SendError(c)
+	}
+	if err := c.Validate(payload); err != nil {
+		return response.ErrorBuilder(http.StatusBadRequest, err, "error validate payload").SendError(c)
+	}
+
+	contentType := c.Request().Header.Get("Content-Type")
+	if strings.HasPrefix(contentType, "multipart/form-data") {
+		if err := c.Request().ParseMultipartForm(64 << 20); err != nil {
+			return response.ErrorBuilder(http.StatusBadRequest, err, "error bind multipart/form-data").SendError(c)
+		}
+		payload.Profile = c.Request().MultipartForm.File["profile"]
+	}
+
+	data, err := h.service.Register(c.(*abstraction.Context), payload)
+	if err != nil {
+		return response.ErrorResponse(err).SendError(c)
+	}
+	return response.SuccessResponse(data).SendSuccess(c)
 }
