@@ -330,11 +330,11 @@ func (s *service) VerifyNumber(ctx *abstraction.Context, payload *dto.AuthVerify
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 		if data == nil {
-			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "wrong id number")
+			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "wrong id number")
 		}
 		if data != nil {
 			if data.Password != nil {
-				return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "user already registered")
+				return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "user already registered")
 			}
 		}
 
@@ -364,7 +364,7 @@ func (s *service) Register(ctx *abstraction.Context, payload *dto.AuthRegisterRe
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 		if userData == nil {
-			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "user not found")
+			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "user not found")
 		}
 
 		newUserData := new(model.UserEntityModel)
