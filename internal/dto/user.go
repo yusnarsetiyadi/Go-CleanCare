@@ -3,7 +3,6 @@ package dto
 type UserCreateRequest struct {
 	Name     string `json:"name" form:"name" validate:"required"`
 	NumberId string `json:"number_id" form:"number_id" validate:"required"`
-	Email    string `json:"email" form:"email" validate:"required"`
 	RoleId   int    `json:"role_id" form:"role_id" validate:"required"`
 }
 

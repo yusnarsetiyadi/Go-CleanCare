@@ -288,6 +288,11 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		where += " AND id = @id"
 		whereParam["id"] = val
 	}
+	if ctx.QueryParam("number_id") != "" {
+		val := "%" + SanitizeString(ctx.QueryParam("number_id")) + "%"
+		where += " AND LOWER(number_id) LIKE @number_id"
+		whereParam["number_id"] = val
+	}
 	if ctx.QueryParam("name") != "" {
 		val := "%" + SanitizeString(ctx.QueryParam("name")) + "%"
 		where += " AND LOWER(name) LIKE @name"
@@ -317,9 +322,6 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("updated_by")))
 		where += " AND updated_by = @updated_by"
 		whereParam["updated_by"] = val
-	}
-	if ctx.QueryParam("is_read") != "" {
-		where += " AND is_read = @" + SanitizeStringOfAlphabet(ctx.QueryParam("is_read"))
 	}
 	if ctx.QueryParam("created_at") != "" {
 		val := SanitizeStringDateBetween(ctx.QueryParam("created_at"))

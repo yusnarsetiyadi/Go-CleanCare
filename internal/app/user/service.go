@@ -37,6 +37,7 @@ type Service interface {
 
 type service struct {
 	UserRepository repository.User
+	RoleRepository repository.Role
 
 	DB      *gorm.DB
 	DbRedis *redis.Client
@@ -45,6 +46,7 @@ type service struct {
 func NewService(f *factory.Factory) Service {
 	return &service{
 		UserRepository: f.UserRepository,
+		RoleRepository: f.RoleRepository,
 
 		DB:      f.Db,
 		DbRedis: f.DbRedis,
@@ -57,46 +59,32 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.UserCreateReques
 			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
 		}
 
-		userEmail, err := s.UserRepository.FindByEmail(ctx, payload.Email)
+		userNumber, err := s.UserRepository.FindByNumberId(ctx, payload.NumberId)
 		if err != nil && err.Error() != "record not found" {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		if userEmail != nil {
-			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "email already exist")
+		if userNumber != nil {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "number id already exist")
 		}
 
-		passwordString := general.GeneratePassword(8, 1, 1, 1, 1)
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(passwordString), bcrypt.DefaultCost)
-		if err != nil {
+		roleData, err := s.RoleRepository.FindById(ctx, payload.RoleId)
+		if err != nil && err.Error() != "record not found" {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		hashedPasswordStr := string(hashedPassword)
+		if roleData == nil {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "role not found")
+		}
 
 		modelUser := &model.UserEntityModel{
 			Context: ctx,
 			UserEntity: model.UserEntity{
+				NumberId: payload.NumberId,
 				Name:     payload.Name,
-				Email:    &payload.Email,
-				Password: &hashedPasswordStr,
 				RoleId:   payload.RoleId,
 				IsDelete: false,
 			},
 		}
 		if err = s.UserRepository.Create(ctx, modelUser).Error; err != nil {
-			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-		}
-
-		if err = gomail.SendMail(payload.Email, "Welcome to SelarasHomeId (Login Information)", general.ParseTemplateEmailToHtml("./assets/html/email/notif_login_info.html", struct {
-			NAME     string
-			EMAIL    string
-			PASSWORD string
-			LINK     string
-		}{
-			NAME:     payload.Name,
-			EMAIL:    payload.Email,
-			PASSWORD: passwordString,
-			LINK:     constant.BASE_URL,
-		})); err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
