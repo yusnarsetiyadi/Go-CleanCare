@@ -3,8 +3,7 @@ package model
 import "iss_cleancare/internal/abstraction"
 
 type TaskEntity struct {
-	Name     string `json:"name"`
-	IsDelete bool   `json:"is_delete"`
+	Name string `json:"name"`
 }
 
 // TaskEntityModel ...

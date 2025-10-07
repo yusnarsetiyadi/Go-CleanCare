@@ -23,8 +23,10 @@ type Factory struct {
 }
 
 type Repository_initiated struct {
-	UserRepository repository.User
-	RoleRepository repository.Role
+	RoleRepository     repository.Role
+	TaskRepository     repository.Task
+	TaskTypeRepository repository.TaskType
+	UserRepository     repository.User
 }
 
 type GoogleDrive struct {
@@ -81,6 +83,8 @@ func (f *Factory) SetupRepository() {
 		panic("Failed setup repository, db is undefined")
 	}
 
-	f.UserRepository = repository.NewUser(f.Db)
 	f.RoleRepository = repository.NewRole(f.Db)
+	f.TaskRepository = repository.NewTask(f.Db)
+	f.TaskTypeRepository = repository.NewTaskType(f.Db)
+	f.UserRepository = repository.NewUser(f.Db)
 }

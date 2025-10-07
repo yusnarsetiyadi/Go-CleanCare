@@ -1,7 +1,8 @@
-package role
+package task
 
 import (
 	"iss_cleancare/internal/abstraction"
+	"iss_cleancare/internal/app/task/tipe"
 	"iss_cleancare/internal/factory"
 	"iss_cleancare/pkg/util/response"
 
@@ -10,11 +11,15 @@ import (
 
 type handler struct {
 	service Service
+
+	TaskTypeHandler tipe.Handler
 }
 
 func NewHandler(f *factory.Factory) *handler {
 	return &handler{
 		service: NewService(f),
+
+		TaskTypeHandler: *tipe.NewHandler(f),
 	}
 }
 

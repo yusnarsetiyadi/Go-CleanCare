@@ -1,4 +1,4 @@
-package contact
+package user
 
 import (
 	"iss_cleancare/internal/abstraction"

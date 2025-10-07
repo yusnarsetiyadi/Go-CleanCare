@@ -1,4 +1,4 @@
-package role
+package task
 
 import (
 	"iss_cleancare/internal/middleware"
@@ -8,4 +8,6 @@ import (
 
 func (h *handler) Route(v *echo.Group) {
 	v.GET("", h.Find, middleware.Authentication)
+
+	h.TaskTypeHandler.Route(v.Group("/type"))
 }

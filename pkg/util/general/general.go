@@ -266,50 +266,19 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 	if ctx.QueryParam("search") != "" {
 		val := "%" + SanitizeString(ctx.QueryParam("search")) + "%"
 		switch searchType {
+		case "role":
+			where += " AND (LOWER(name) LIKE @search_name)"
+			whereParam["search_name"] = val
+		case "task":
+			where += " AND (LOWER(name) LIKE @search_name)"
+			whereParam["search_name"] = val
+		case "task_type":
+			where += " AND (LOWER(name) LIKE @search_name)"
+			whereParam["search_name"] = val
 		case "user":
 			where += " AND (LOWER(name) LIKE @search_name OR LOWER(email) LIKE @search_email)"
 			whereParam["search_name"] = val
 			whereParam["search_email"] = val
-		case "role":
-			where += " AND (LOWER(name) LIKE @search_name)"
-			whereParam["search_name"] = val
-		case "project":
-			where += " AND (LOWER(name) LIKE @search_name)"
-			whereParam["search_name"] = val
-		case "banner":
-			where += " AND (LOWER(file_name) LIKE @search_file_name)"
-			whereParam["search_file_name"] = val
-		case "notifikasi":
-			where += " AND (LOWER(title) LIKE @search_title OR LOWER(message) LIKE @search_message)"
-			whereParam["search_title"] = val
-			whereParam["search_message"] = val
-		case "workspace":
-			where += " AND (LOWER(name) LIKE @search_name)"
-			whereParam["search_name"] = val
-		case "board":
-			where += " AND (LOWER(name) LIKE @search_name)"
-			whereParam["search_name"] = val
-		case "task":
-			where += " AND (LOWER(title) LIKE @search_title OR LOWER(description) LIKE @search_description)"
-			whereParam["search_title"] = val
-			whereParam["search_description"] = val
-		case "contact":
-			where += " AND (LOWER(name) LIKE @search_name OR LOWER(email) LIKE @search_email OR LOWER(phone) LIKE @search_phone)"
-			whereParam["search_name"] = val
-			whereParam["search_email"] = val
-			whereParam["search_phone"] = val
-		case "affiliate":
-			where += " AND (LOWER(name) LIKE @search_name OR LOWER(email) LIKE @search_email OR LOWER(phone) LIKE @search_phone)"
-			whereParam["search_name"] = val
-			whereParam["search_email"] = val
-			whereParam["search_phone"] = val
-		case "task_label":
-			where += " AND (LOWER(title) LIKE @search_title OR LOWER(color) LIKE @search_color)"
-			whereParam["search_title"] = val
-			whereParam["search_color"] = val
-		case "task_checklist":
-			where += " AND (LOWER(title) LIKE @search_title)"
-			whereParam["search_title"] = val
 		}
 	}
 
@@ -329,21 +298,6 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		where += " AND LOWER(email) LIKE @email"
 		whereParam["email"] = val
 	}
-	if ctx.QueryParam("title") != "" {
-		val := "%" + SanitizeString(ctx.QueryParam("title")) + "%"
-		where += " AND LOWER(title) LIKE @title"
-		whereParam["title"] = val
-	}
-	if ctx.QueryParam("description") != "" {
-		val := "%" + SanitizeString(ctx.QueryParam("description")) + "%"
-		where += " AND LOWER(description) LIKE @description"
-		whereParam["description"] = val
-	}
-	if ctx.QueryParam("label") != "" {
-		val := "%" + SanitizeString(ctx.QueryParam("label")) + "%"
-		where += " AND LOWER(label) LIKE @label"
-		whereParam["label"] = val
-	}
 	if ctx.QueryParam("role_id") != "" {
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("role_id")))
 		where += " AND role_id = @role_id"
@@ -353,12 +307,6 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("task_id")))
 		where += " AND task_id = @task_id"
 		whereParam["task_id"] = val
-	}
-	if ctx.QueryParam("assign_to_user") != "" {
-		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("assign_to_user")))
-		valStr := "%" + strconv.Itoa(val) + "%"
-		where += " AND assign_to_user = @assign_to_user"
-		whereParam["assign_to_user"] = valStr
 	}
 	if ctx.QueryParam("created_by") != "" {
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("created_by")))
@@ -370,29 +318,8 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		where += " AND updated_by = @updated_by"
 		whereParam["updated_by"] = val
 	}
-	if ctx.QueryParam("is_locked") != "" {
-		where += " AND is_locked = @" + SanitizeStringOfAlphabet(ctx.QueryParam("is_locked"))
-	}
 	if ctx.QueryParam("is_read") != "" {
 		where += " AND is_read = @" + SanitizeStringOfAlphabet(ctx.QueryParam("is_read"))
-	}
-	if ctx.QueryParam("is_completed") != "" {
-		where += " AND is_completed = @" + SanitizeStringOfAlphabet(ctx.QueryParam("is_completed"))
-	}
-	if ctx.QueryParam("is_history") != "" {
-		where += " AND is_history = @" + SanitizeStringOfAlphabet(ctx.QueryParam("is_history"))
-	}
-	if ctx.QueryParam("login_from") != "" {
-		val := "%" + SanitizeString(ctx.QueryParam("login_from")) + "%"
-		where += " AND LOWER(login_from) LIKE @login_from"
-		whereParam["login_from"] = val
-	}
-	if ctx.QueryParam("due_date") != "" {
-		val := SanitizeStringDateBetween(ctx.QueryParam("due_date"))
-		valDate := strings.Split(val, "_")
-		where += " AND due_date BETWEEN @start_due_date AND @end_due_date"
-		whereParam["start_due_date"] = valDate[0] + " 00:00:00"
-		whereParam["end_due_date"] = valDate[1] + " 23:59:59"
 	}
 	if ctx.QueryParam("created_at") != "" {
 		val := SanitizeStringDateBetween(ctx.QueryParam("created_at"))
