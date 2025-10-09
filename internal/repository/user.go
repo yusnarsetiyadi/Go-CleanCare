@@ -19,6 +19,7 @@ type User interface {
 	UpdateDelete(ctx *abstraction.Context, data *model.UserEntityModel) *gorm.DB
 	FindByRoleId(ctx *abstraction.Context, role_id int) (*model.UserEntityModel, error)
 	FindByRoleIdArr(ctx *abstraction.Context, role_id int, no_paging bool) (data []*model.UserEntityModel, err error)
+	UpdateToNull(ctx *abstraction.Context, data *model.UserEntityModel, column string) *gorm.DB
 }
 
 type user struct {
@@ -145,4 +146,8 @@ func (r *user) FindByRoleIdArr(ctx *abstraction.Context, role_id int, no_paging 
 		Find(&data).
 		Error
 	return
+}
+
+func (r *user) UpdateToNull(ctx *abstraction.Context, data *model.UserEntityModel, column string) *gorm.DB {
+	return r.CheckTrx(ctx).Model(data).Where("id = ?", data.ID).Update(column, nil)
 }

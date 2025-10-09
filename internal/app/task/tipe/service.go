@@ -38,7 +38,7 @@ func NewService(f *factory.Factory) Service {
 }
 
 func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error) {
-	data, err := s.TaskTypeRepository.Find(ctx, true)
+	data, err := s.TaskTypeRepository.Find(ctx, false)
 	if err != nil && err.Error() != "record not found" {
 		return nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 	}
@@ -49,8 +49,9 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 	var res []map[string]interface{} = nil
 	for _, v := range data {
 		res = append(res, map[string]interface{}{
-			"id":   v.ID,
-			"name": v.Name,
+			"id":      v.ID,
+			"name":    v.Name,
+			"task_id": v.TaskId,
 		})
 	}
 	return map[string]interface{}{

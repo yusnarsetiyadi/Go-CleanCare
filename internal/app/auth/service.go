@@ -332,10 +332,8 @@ func (s *service) VerifyNumber(ctx *abstraction.Context, payload *dto.AuthVerify
 		if data == nil {
 			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "wrong id number")
 		}
-		if data != nil {
-			if data.Password != nil {
-				return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "user already registered")
-			}
+		if data.Password != nil {
+			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "user already registered")
 		}
 
 		return nil
@@ -371,6 +369,13 @@ func (s *service) Register(ctx *abstraction.Context, payload *dto.AuthRegisterRe
 		newUserData.Context = ctx
 		newUserData.ID = userData.ID
 		if payload.Email != nil {
+			userEmail, err := s.UserRepository.FindByEmail(ctx, *payload.Email)
+			if err != nil && err.Error() != "record not found" {
+				return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+			}
+			if userEmail != nil {
+				return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "email already exist")
+			}
 			newUserData.Email = payload.Email
 		}
 		if payload.Password != nil {
