@@ -28,6 +28,7 @@ type Repository_initiated struct {
 	TaskTypeRepository repository.TaskType
 	UserRepository     repository.User
 	WorkRepository     repository.Work
+	CommentRepository  repository.Comment
 }
 
 type GoogleDrive struct {
@@ -89,4 +90,5 @@ func (f *Factory) SetupRepository() {
 	f.TaskTypeRepository = repository.NewTaskType(f.Db)
 	f.UserRepository = repository.NewUser(f.Db)
 	f.WorkRepository = repository.NewWork(f.Db)
+	f.CommentRepository = repository.NewComment(f.Db)
 }

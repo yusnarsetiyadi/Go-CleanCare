@@ -15,4 +15,6 @@ func (h *handler) Route(v *echo.Group) {
 	v.GET("/export", h.Export, middleware.Authentication)
 	v.GET("/dashboard-admin", h.DashboardAdmin, middleware.Authentication)
 	v.GET("/dashboard-staf", h.DashboardStaf, middleware.Authentication)
+
+	h.CommentHandler.Route(v.Group("/comment"))
 }

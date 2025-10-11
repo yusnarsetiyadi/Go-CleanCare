@@ -2,6 +2,7 @@ package work
 
 import (
 	"iss_cleancare/internal/abstraction"
+	"iss_cleancare/internal/app/work/comment"
 	"iss_cleancare/internal/dto"
 	"iss_cleancare/internal/factory"
 	"iss_cleancare/pkg/util/response"
@@ -13,11 +14,15 @@ import (
 
 type handler struct {
 	service Service
+
+	CommentHandler comment.Handler
 }
 
 func NewHandler(f *factory.Factory) *handler {
 	return &handler{
 		service: NewService(f),
+
+		CommentHandler: *comment.NewHandler(f),
 	}
 }
 
