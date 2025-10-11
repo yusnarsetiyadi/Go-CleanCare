@@ -18,10 +18,6 @@ type Work interface {
 	UpdateToNull(ctx *abstraction.Context, data *model.WorkEntityModel, column string) *gorm.DB
 	FindByTaskIdArrAdmin(ctx *abstraction.Context, task_id int, created_at string, no_paging bool) (floorSummary []*model.FloorSummary, userSummary []*model.UserSummary, errFloor, errUser error)
 	FindByTaskIdArrStaf(ctx *abstraction.Context, task_id int, created_at string, no_paging bool) (taskTypeSummary []*model.TaskTypeSummary, err error)
-	// FindByNumberId(ctx *abstraction.Context, numberId string) (*model.WorkEntityModel, error)
-	// FindByEmail(ctx *abstraction.Context, email string) (*model.WorkEntityModel, error)
-	// UpdateDelete(ctx *abstraction.Context, data *model.WorkEntityModel) *gorm.DB
-	// FindByRoleId(ctx *abstraction.Context, role_id int) (*model.WorkEntityModel, error)
 }
 
 type work struct {
@@ -144,52 +140,3 @@ func (r *work) FindByTaskIdArrStaf(ctx *abstraction.Context, task_id int, create
 
 	return
 }
-
-// func (r *work) FindByNumberId(ctx *abstraction.Context, numberId string) (*model.WorkEntityModel, error) {
-// 	conn := r.CheckTrx(ctx)
-
-// 	var data model.WorkEntityModel
-// 	err := conn.
-// 		Where("LOWER(number_id) = LOWER(?) AND is_delete = ?", numberId, false).
-// 		Preload("Role").
-// 		First(&data).
-// 		Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
-
-// func (r *work) FindByEmail(ctx *abstraction.Context, email string) (*model.WorkEntityModel, error) {
-// 	conn := r.CheckTrx(ctx)
-
-// 	var data model.WorkEntityModel
-// 	err := conn.
-// 		Where("LOWER(email) = LOWER(?) AND is_delete = ?", email, false).
-// 		Preload("Role").
-// 		First(&data).
-// 		Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
-
-// func (r *work) UpdateDelete(ctx *abstraction.Context, data *model.WorkEntityModel) *gorm.DB {
-// 	return r.CheckTrx(ctx).Model(data).Where("id = ?", data.ID).Update("is_delete", data.IsDelete)
-// }
-
-// func (r *work) FindByRoleId(ctx *abstraction.Context, role_id int) (*model.WorkEntityModel, error) {
-// 	conn := r.CheckTrx(ctx)
-
-// 	var data model.WorkEntityModel
-// 	err := conn.
-// 		Where("role_id = ? AND is_delete = ?", role_id, false).
-// 		Preload("Role").
-// 		First(&data).
-// 		Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
