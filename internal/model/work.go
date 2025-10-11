@@ -7,14 +7,14 @@ import (
 )
 
 type WorkEntity struct {
-	UserId      int    `json:"user_id"`
-	TaskId      int    `json:"task_id"`
-	TaskTypeId  int    `json:"task_type_id"`
-	Lantai      string `json:"lantai"`
-	Keterangan  string `json:"keterangan"`
-	ImageBefore string `json:"image_before"`
-	ImageAfter  string `json:"image_after"`
-	IsDelete    bool   `json:"is_delete"`
+	UserId      int     `json:"user_id"`
+	TaskId      int     `json:"task_id"`
+	TaskTypeId  int     `json:"task_type_id"`
+	Floor       string  `json:"floor"`
+	Info        string  `json:"info"`
+	ImageBefore *string `json:"image_before"`
+	ImageAfter  *string `json:"image_after"`
+	IsDelete    bool    `json:"is_delete"`
 }
 
 // WorkEntityModel ...
@@ -24,13 +24,11 @@ type WorkEntityModel struct {
 	// entity
 	WorkEntity
 
-	abstraction.EntityWithBy
+	abstraction.Entity
 
 	User     UserEntityModel     `json:"user" gorm:"foreignKey:UserId"`
 	Task     TaskEntityModel     `json:"task" gorm:"foreignKey:TaskId"`
 	TaskType TaskTypeEntityModel `json:"task_type" gorm:"foreignKey:TaskTypeId"`
-	CreateBy UserEntityModel     `json:"create_by" gorm:"foreignKey:CreatedBy"`
-	UpdateBy UserEntityModel     `json:"update_by" gorm:"foreignKey:UpdatedBy"`
 
 	// context
 	Context *abstraction.Context `json:"-" gorm:"-"`
@@ -53,4 +51,21 @@ func (m *WorkEntityModel) BeforeUpdate(tx *gorm.DB) (err error) {
 func (m *WorkEntityModel) BeforeCreate(tx *gorm.DB) (err error) {
 	// m.CreatedAt = *general.Now()
 	return
+}
+
+type FloorSummary struct {
+	Floor string `json:"floor"`
+	Count int    `json:"count"`
+}
+
+type UserSummary struct {
+	UserId int    `json:"user_id"`
+	Name   string `json:"name"`
+	Count  int    `json:"count"`
+}
+
+type TaskTypeSummary struct {
+	TaskTypeId int    `json:"task_type_id"`
+	Name       string `json:"name"`
+	Count      int    `json:"count"`
 }

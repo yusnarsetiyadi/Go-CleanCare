@@ -31,3 +31,7 @@ type UserChangePasswordRequest struct {
 	OldPassword string `json:"old_password" form:"old_password" validate:"required"`
 	NewPassword string `json:"new_password" form:"new_password" validate:"required"`
 }
+
+type UserExportRequest struct {
+	Format string `query:"format" validate:"required"`
+}

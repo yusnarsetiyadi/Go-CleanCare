@@ -3,9 +3,10 @@ package constant
 const (
 	DRIVE_FOLDER = "ISS_CleanCare_App"
 
-	ROLE_ID_ADMIN = 1
-	ROLE_ID_STAFF = 2
-
+	ROLE_ID_ADMIN                             = 1
+	ROLE_ID_STAFF                             = 2
+	TASK_ID_DAILY                             = 1
+	TASK_ID_SERVICE                           = 2
 	REDIS_REQUEST_RESET_PASSWORD_IP_KEYS      = "iss-reset-password:ip:%s"
 	REDIS_REQUEST_VERIFY_NUMBER_IP_KEYS       = "iss-verify-mumber:ip:%s"
 	REDIS_REQUEST_MAX_ATTEMPTS_RESET_PASSWORD = 5

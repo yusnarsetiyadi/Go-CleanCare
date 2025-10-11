@@ -9,6 +9,7 @@ import (
 	"iss_cleancare/internal/app/task"
 	"iss_cleancare/internal/app/test"
 	"iss_cleancare/internal/app/user"
+	"iss_cleancare/internal/app/work"
 	"iss_cleancare/internal/config"
 	"iss_cleancare/internal/factory"
 	"iss_cleancare/pkg/constant"
@@ -35,4 +36,5 @@ func Init(e *echo.Echo, f *factory.Factory) {
 	role.NewHandler(f).Route(e.Group("/role"))
 	task.NewHandler(f).Route(e.Group("/task"))
 	user.NewHandler(f).Route(e.Group("/user"))
+	work.NewHandler(f).Route(e.Group("/work"))
 }

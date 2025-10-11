@@ -16,6 +16,7 @@ import (
 	"net/http"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/jung-kurt/gofpdf"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/xuri/excelize/v2"
@@ -31,7 +32,7 @@ type Service interface {
 	Update(ctx *abstraction.Context, payload *dto.UserUpdateRequest) (map[string]interface{}, error)
 	Delete(ctx *abstraction.Context, payload *dto.UserDeleteByIDRequest) (map[string]interface{}, error)
 	ChangePassword(ctx *abstraction.Context, payload *dto.UserChangePasswordRequest) (map[string]interface{}, error)
-	Export(ctx *abstraction.Context) (string, *bytes.Buffer, error)
+	Export(ctx *abstraction.Context, payload *dto.UserExportRequest) (string, *bytes.Buffer, string, error)
 }
 
 type service struct {
@@ -182,7 +183,10 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.UserFindByIDRe
 }
 
 func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateRequest) (map[string]interface{}, error) {
-	var allFileUploaded []string = nil
+	var (
+		allFileUploaded []string
+		allFileOld      []string
+	)
 	if err := trxmanager.New(s.DB).WithTrx(ctx, func(ctx *abstraction.Context) error {
 		userData, err := s.UserRepository.FindById(ctx, payload.ID)
 		if err != nil && err.Error() != "record not found" {
@@ -238,10 +242,7 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateReques
 			newUserData.ProfileName = &newFile.Name
 
 			if userData.Profile != nil {
-				err = gdrive.DeleteFile(s.sDrive, *userData.Profile)
-				if err != nil {
-					return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-				}
+				allFileOld = append(allFileOld, *userData.Profile)
 			}
 		} else {
 			if payload.DeleteProfile != nil && *payload.DeleteProfile {
@@ -271,6 +272,14 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateReques
 		}
 		return nil, err
 	}
+
+	for _, v := range allFileOld {
+		errDel := gdrive.DeleteFile(s.sDrive, v)
+		if errDel != nil {
+			logrus.Error("error delete file old after trxmanager:", errDel.Error())
+		}
+	}
+
 	return map[string]interface{}{
 		"message": "success update!",
 	}, nil
@@ -365,54 +374,134 @@ func (s *service) ChangePassword(ctx *abstraction.Context, payload *dto.UserChan
 	}, nil
 }
 
-func (s *service) Export(ctx *abstraction.Context) (string, *bytes.Buffer, error) {
+func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportRequest) (string, *bytes.Buffer, string, error) {
 	data, err := s.UserRepository.Find(ctx, true)
 	if err != nil && err.Error() != "record not found" {
-		return "", nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 	}
 
-	f := excelize.NewFile()
-	sheet := "ISS CleanCare - User"
-	index, err := f.NewSheet(general.TruncateSheetName(sheet))
-	if err != nil {
-		return "", nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-	}
-	f.DeleteSheet("Sheet1")
-	f.SetActiveSheet(index)
-	f.SetCellValue(sheet, "A1", "No")
-	f.SetCellValue(sheet, "B1", "Employee Number")
-	f.SetCellValue(sheet, "C1", "Name")
-	f.SetCellValue(sheet, "D1", "Email")
-	f.SetCellValue(sheet, "E1", "Role")
-	f.SetCellValue(sheet, "F1", "Registered Date")
-	f.SetCellValue(sheet, "G1", "Verified")
-	for i, v := range data {
-		colA := fmt.Sprintf("A%d", i+2)
-		colB := fmt.Sprintf("B%d", i+2)
-		colC := fmt.Sprintf("C%d", i+2)
-		colD := fmt.Sprintf("D%d", i+2)
-		colE := fmt.Sprintf("E%d", i+2)
-		colF := fmt.Sprintf("F%d", i+2)
-		colG := fmt.Sprintf("G%d", i+2)
-		no := i + 1
-		f.SetCellValue(sheet, colA, no)
-		f.SetCellValue(sheet, colB, v.NumberId)
-		f.SetCellValue(sheet, colC, v.Name)
-		if v.Email == nil {
-			f.SetCellValue(sheet, colD, "-")
-			f.SetCellValue(sheet, colG, "No")
-		} else {
-			f.SetCellValue(sheet, colD, *v.Email)
-			f.SetCellValue(sheet, colG, "Yes")
+	if payload.Format == "pdf" {
+		pdf := gofpdf.New("L", "mm", "A4", "")
+		pdf.SetMargins(10, 10, 10)
+		pdf.AddPage()
+		pdf.SetFont("Arial", "B", 16)
+		pdf.Cell(0, 10, "ISS CleanCare - Laporan Data Petugas Kebersihan")
+		pdf.Ln(12)
+		pdf.SetFont("Arial", "B", 10)
+		header := []string{
+			"No", "Nomor ID", "Nama", "Email",
+			"Jabatan", "Tanggal Terdaftar", "Status Verifikasi",
 		}
-		f.SetCellValue(sheet, colE, v.Role.Name)
-		f.SetCellValue(sheet, colF, v.CreatedAt.Format("2006-01-02 15:04:05"))
-	}
+		colWidths := []float64{10, 35, 40, 50, 40, 60, 42}
+		for i, str := range header {
+			pdf.CellFormat(colWidths[i], 8, str, "1", 0, "C", false, 0, "")
+		}
+		pdf.Ln(-1)
+		pdf.SetFont("Arial", "", 9)
 
-	var buf bytes.Buffer
-	if err := f.Write(&buf); err != nil {
-		return "", nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		for i, v := range data {
+			no := fmt.Sprintf("%d", i+1)
+			email := "-"
+			role := ""
+			verified := "Belum"
+
+			if v.Email != nil {
+				email = *v.Email
+				verified = "Sudah"
+			}
+
+			if v.RoleId == constant.ROLE_ID_STAFF {
+				role = "Petugas Kebersihan"
+			} else {
+				role = "Supervisor"
+			}
+
+			row := []string{
+				no,
+				v.NumberId,
+				v.Name,
+				email,
+				role,
+				general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")),
+				verified,
+			}
+			startY := pdf.GetY()
+			maxHeight := 0.0
+
+			for j, txt := range row {
+				lines := pdf.SplitLines([]byte(txt), colWidths[j])
+				h := float64(len(lines)) * 5
+				if h > maxHeight {
+					maxHeight = h
+				}
+			}
+			xStart := pdf.GetX()
+			for j, txt := range row {
+				x := pdf.GetX()
+				y := pdf.GetY()
+
+				pdf.MultiCell(colWidths[j], 5, txt, "1", "", false)
+				pdf.SetXY(x+colWidths[j], y)
+			}
+			pdf.SetXY(xStart, startY+maxHeight)
+		}
+
+		var buf bytes.Buffer
+		if err := pdf.Output(&buf); err != nil {
+			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+
+		filename := "ISS CleanCare - Laporan Data Petugas Kebersihan.pdf"
+		return filename, &buf, "pdf", nil
+
+	} else {
+		f := excelize.NewFile()
+		sheet := "ISS CleanCare - Laporan Data Petugas Kebersihan"
+		index, err := f.NewSheet(general.TruncateSheetName(sheet))
+		if err != nil {
+			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+		f.DeleteSheet("Sheet1")
+		f.SetActiveSheet(index)
+		f.SetCellValue(sheet, "A1", "No")
+		f.SetCellValue(sheet, "B1", "Nomor ID")
+		f.SetCellValue(sheet, "C1", "Nama")
+		f.SetCellValue(sheet, "D1", "Email")
+		f.SetCellValue(sheet, "E1", "Jabatan")
+		f.SetCellValue(sheet, "F1", "Tanggal Terdaftar")
+		f.SetCellValue(sheet, "G1", "Status Verifikasi")
+		for i, v := range data {
+			colA := fmt.Sprintf("A%d", i+2)
+			colB := fmt.Sprintf("B%d", i+2)
+			colC := fmt.Sprintf("C%d", i+2)
+			colD := fmt.Sprintf("D%d", i+2)
+			colE := fmt.Sprintf("E%d", i+2)
+			colF := fmt.Sprintf("F%d", i+2)
+			colG := fmt.Sprintf("G%d", i+2)
+			no := i + 1
+			f.SetCellValue(sheet, colA, no)
+			f.SetCellValue(sheet, colB, v.NumberId)
+			f.SetCellValue(sheet, colC, v.Name)
+			if v.Email == nil {
+				f.SetCellValue(sheet, colD, "-")
+				f.SetCellValue(sheet, colG, "Belum")
+			} else {
+				f.SetCellValue(sheet, colD, *v.Email)
+				f.SetCellValue(sheet, colG, "Sudah")
+			}
+			if v.RoleId == constant.ROLE_ID_STAFF {
+				f.SetCellValue(sheet, colE, "Petugas Kebersihan")
+			} else {
+				f.SetCellValue(sheet, colE, "Supervisor")
+			}
+			f.SetCellValue(sheet, colF, general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")))
+		}
+
+		var buf bytes.Buffer
+		if err := f.Write(&buf); err != nil {
+			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+		filename := "ISS CleanCare - Laporan Data Petugas Kebersihan.xlsx"
+		return filename, &buf, "excel", nil
 	}
-	filename := fmt.Sprintf("ISS CleanCare - User (%s).xlsx", general.NowLocal().Format("2006-01-02"))
-	return filename, &buf, nil
 }

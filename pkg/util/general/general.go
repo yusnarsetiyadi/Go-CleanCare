@@ -276,9 +276,14 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 			where += " AND (LOWER(name) LIKE @search_name)"
 			whereParam["search_name"] = val
 		case "user":
-			where += " AND (LOWER(name) LIKE @search_name OR LOWER(email) LIKE @search_email)"
+			where += " AND (LOWER(name) LIKE @search_name OR LOWER(email) LIKE @search_email OR LOWER(number_id) LIKE @search_number_id)"
 			whereParam["search_name"] = val
 			whereParam["search_email"] = val
+			whereParam["search_number_id"] = val
+		case "work":
+			where += " AND (LOWER(floor) LIKE @search_floor OR LOWER(info) LIKE @search_info)"
+			whereParam["search_floor"] = val
+			whereParam["search_info"] = val
 		}
 	}
 
@@ -303,6 +308,16 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		where += " AND LOWER(email) LIKE @email"
 		whereParam["email"] = val
 	}
+	if ctx.QueryParam("floor") != "" {
+		val := "%" + SanitizeString(ctx.QueryParam("floor")) + "%"
+		where += " AND LOWER(floor) LIKE @floor"
+		whereParam["floor"] = val
+	}
+	if ctx.QueryParam("info") != "" {
+		val := "%" + SanitizeString(ctx.QueryParam("info")) + "%"
+		where += " AND LOWER(info) LIKE @info"
+		whereParam["info"] = val
+	}
 	if ctx.QueryParam("role_id") != "" {
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("role_id")))
 		where += " AND role_id = @role_id"
@@ -312,6 +327,16 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("task_id")))
 		where += " AND task_id = @task_id"
 		whereParam["task_id"] = val
+	}
+	if ctx.QueryParam("task_type_id") != "" {
+		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("task_type_id")))
+		where += " AND task_type_id = @task_type_id"
+		whereParam["task_type_id"] = val
+	}
+	if ctx.QueryParam("user_id") != "" {
+		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("user_id")))
+		where += " AND user_id = @user_id"
+		whereParam["user_id"] = val
 	}
 	if ctx.QueryParam("created_by") != "" {
 		val, _ := strconv.Atoi(SanitizeStringOfNumber(ctx.QueryParam("created_by")))
@@ -383,7 +408,7 @@ func ProcessOrder(ctx *abstraction.Context) string {
 func ValidationOrder(str string) string {
 	str = SanitizeString(str)
 	str = strings.ToLower(str)
-	orderStack := []string{"id", "name", "email", "sort_number", "created_at", "label"} // fill query order
+	orderStack := []string{"id", "name", "email", "task_id", "number_id", "role_id", "user_id", "task_type_id", "floor", "info", "created_at", "updated_at"} // fill query order
 	for _, item := range orderStack {
 		if item == str {
 			return str
@@ -847,4 +872,48 @@ func TruncateSheetName(name string) string {
 		return string([]rune(name)[:31])
 	}
 	return name
+}
+
+func JoinFileAndNameWithDelimiter(str1, str2 string) string {
+	return str1 + "||DELIMITER_FILE||" + str2
+}
+
+func SplitFileAndNameWithDelimiter(input string) (string, string) {
+	parts := strings.SplitN(input, "||DELIMITER_FILE||", 2)
+	if len(parts) < 2 {
+		return input, ""
+	}
+	return parts[0], parts[1]
+}
+
+func ConvertDateToIndonesian(dateStr string) string {
+	t, _ := time.Parse("2006-01-02", dateStr)
+	days := []string{
+		"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu",
+	}
+	months := []string{
+		"", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+		"Juli", "Agustus", "September", "Oktober", "November", "Desember",
+	}
+	dayName := days[int(t.Weekday())]
+	monthName := months[int(t.Month())]
+	formatted := fmt.Sprintf("%s, %d %s %d", dayName, t.Day(), monthName, t.Year())
+	return formatted
+}
+
+func ConvertDateTimeToIndonesian(datetimeStr string) string {
+	t, _ := time.Parse("2006-01-02 15:04:05", datetimeStr)
+	days := []string{
+		"Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu",
+	}
+	months := []string{
+		"", "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+		"Juli", "Agustus", "September", "Oktober", "November", "Desember",
+	}
+	dayName := days[int(t.Weekday())]
+	monthName := months[int(t.Month())]
+	formatted := fmt.Sprintf("%s, %d %s %d %02d:%02d",
+		dayName, t.Day(), monthName, t.Year(), t.Hour(), t.Minute())
+
+	return formatted
 }
