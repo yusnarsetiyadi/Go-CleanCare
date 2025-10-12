@@ -15,6 +15,7 @@ const (
 	REDIS_KEY_USER_LOGIN                      = "iss_login_token_user_"
 	REDIS_KEY_AUTO_LOGOUT                     = "iss_user_auto_logout"
 	REDIS_KEY_REFRESH_TOKEN                   = "iss-refresh-token:%s"
+	REDIS_KEY_UNREAD_COMMENT                  = "iss-unread-comment:%d"
 	REDIS_MAX_REFRESH_TOKEN                   = 30
 
 	PATH_FILE_SAVED    = "../file_saved"

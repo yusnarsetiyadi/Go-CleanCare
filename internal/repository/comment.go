@@ -15,9 +15,7 @@ type Comment interface {
 	Create(ctx *abstraction.Context, data *model.CommentEntityModel) *gorm.DB
 	FindById(ctx *abstraction.Context, id int) (*model.CommentEntityModel, error)
 	Update(ctx *abstraction.Context, data *model.CommentEntityModel) *gorm.DB
-	// FindByNumberId(ctx *abstraction.Context, numberId string) (*model.CommentEntityModel, error)
-	// FindByEmail(ctx *abstraction.Context, email string) (*model.CommentEntityModel, error)
-	// UpdateToNull(ctx *abstraction.Context, data *model.CommentEntityModel, column string) *gorm.DB
+	FindByWorkIdArr(ctx *abstraction.Context, work_id int, no_paging bool) (data []*model.CommentEntityModel, err error)
 }
 
 type comment struct {
@@ -73,6 +71,7 @@ func (r *comment) FindById(ctx *abstraction.Context, id int) (*model.CommentEnti
 	var data model.CommentEntityModel
 	err := conn.
 		Where("id = ? AND is_delete = ?", id, false).
+		Preload("Work").
 		First(&data).
 		Error
 	if err != nil {
@@ -85,36 +84,15 @@ func (r *comment) Update(ctx *abstraction.Context, data *model.CommentEntityMode
 	return r.CheckTrx(ctx).Model(data).Where("id = ?", data.ID).Updates(data)
 }
 
-// func (r *comment) FindByNumberId(ctx *abstraction.Context, numberId string) (*model.CommentEntityModel, error) {
-// 	conn := r.CheckTrx(ctx)
-
-// 	var data model.CommentEntityModel
-// 	err := conn.
-// 		Where("LOWER(number_id) = LOWER(?) AND is_delete = ?", numberId, false).
-// 		Preload("Role").
-// 		First(&data).
-// 		Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
-
-// func (r *comment) FindByEmail(ctx *abstraction.Context, email string) (*model.CommentEntityModel, error) {
-// 	conn := r.CheckTrx(ctx)
-
-// 	var data model.CommentEntityModel
-// 	err := conn.
-// 		Where("LOWER(email) = LOWER(?) AND is_delete = ?", email, false).
-// 		Preload("Role").
-// 		First(&data).
-// 		Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return &data, nil
-// }
-
-// func (r *comment) UpdateToNull(ctx *abstraction.Context, data *model.CommentEntityModel, column string) *gorm.DB {
-// 	return r.CheckTrx(ctx).Model(data).Where("id = ?", data.ID).Update(column, nil)
-// }
+func (r *comment) FindByWorkIdArr(ctx *abstraction.Context, work_id int, no_paging bool) (data []*model.CommentEntityModel, err error) {
+	limit, offset := general.ProcessLimitOffset(ctx, no_paging)
+	order := general.ProcessOrder(ctx)
+	err = r.CheckTrx(ctx).
+		Where("work_id = ? AND is_delete = ?", work_id, false).
+		Order(order).
+		Limit(limit).
+		Offset(offset).
+		Find(&data).
+		Error
+	return
+}

@@ -16,6 +16,7 @@ type User interface {
 	Count(ctx *abstraction.Context) (data *int, err error)
 	FindById(ctx *abstraction.Context, id int) (*model.UserEntityModel, error)
 	Update(ctx *abstraction.Context, data *model.UserEntityModel) *gorm.DB
+	FindByRoleIdArr(ctx *abstraction.Context, role_id int, no_paging bool) (data []*model.UserEntityModel, err error)
 	UpdateToNull(ctx *abstraction.Context, data *model.UserEntityModel, column string) *gorm.DB
 }
 
@@ -110,6 +111,20 @@ func (r *user) FindById(ctx *abstraction.Context, id int) (*model.UserEntityMode
 
 func (r *user) Update(ctx *abstraction.Context, data *model.UserEntityModel) *gorm.DB {
 	return r.CheckTrx(ctx).Model(data).Where("id = ?", data.ID).Updates(data)
+}
+
+func (r *user) FindByRoleIdArr(ctx *abstraction.Context, role_id int, no_paging bool) (data []*model.UserEntityModel, err error) {
+	limit, offset := general.ProcessLimitOffset(ctx, no_paging)
+	order := general.ProcessOrder(ctx)
+	err = r.CheckTrx(ctx).
+		Where("role_id = ? AND is_delete = ?", role_id, false).
+		Order(order).
+		Limit(limit).
+		Offset(offset).
+		Preload("Role").
+		Find(&data).
+		Error
+	return
 }
 
 func (r *user) UpdateToNull(ctx *abstraction.Context, data *model.UserEntityModel, column string) *gorm.DB {

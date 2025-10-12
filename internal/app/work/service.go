@@ -14,6 +14,8 @@ import (
 	"iss_cleancare/pkg/util/response"
 	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
+	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/go-redis/redis/v8"
@@ -40,6 +42,7 @@ type service struct {
 	TaskRepository     repository.Task
 	TaskTypeRepository repository.TaskType
 	WorkRepository     repository.Work
+	CommentReposiory   repository.Comment
 
 	DB      *gorm.DB
 	DbRedis *redis.Client
@@ -52,6 +55,7 @@ func NewService(f *factory.Factory) Service {
 		TaskRepository:     f.TaskRepository,
 		TaskTypeRepository: f.TaskTypeRepository,
 		WorkRepository:     f.WorkRepository,
+		CommentReposiory:   f.CommentRepository,
 
 		DB:      f.Db,
 		DbRedis: f.DbRedis,
@@ -210,6 +214,19 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 		return nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 	}
 	for _, v := range data {
+		// check comment unread
+		hasUnreadComment := false
+		commentData, err := s.CommentReposiory.FindByWorkIdArr(ctx, v.ID, true)
+		if err != nil && err.Error() != "record not found" {
+			return nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+		for _, comment := range commentData {
+			userDataUnreadComment := general.GetUserIdArrayFromKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(comment.ID))
+			if slices.Contains(userDataUnreadComment, strconv.Itoa(ctx.Auth.ID)) {
+				hasUnreadComment = true
+			}
+		}
+
 		// from user id
 		resUser := map[string]interface{}{
 			"id":           v.User.ID,
@@ -244,10 +261,11 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 				"id":   v.TaskType.ID,
 				"name": v.TaskType.Name,
 			},
-			"floor":      v.Floor,
-			"info":       v.Info,
-			"created_at": general.FormatWithZWithoutChangingTime(v.CreatedAt),
-			"updated_at": general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
+			"floor":          v.Floor,
+			"info":           v.Info,
+			"unread_comment": hasUnreadComment,
+			"created_at":     general.FormatWithZWithoutChangingTime(v.CreatedAt),
+			"updated_at":     general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
 		}
 
 		res = append(res, resData)

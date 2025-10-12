@@ -7,11 +7,15 @@ import (
 	"iss_cleancare/internal/factory"
 	"iss_cleancare/internal/model"
 	"iss_cleancare/internal/repository"
+	"iss_cleancare/pkg/constant"
 	"iss_cleancare/pkg/util/general"
 	"iss_cleancare/pkg/util/response"
 	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
+	"slices"
+	"strconv"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/gorm"
 )
 
@@ -25,16 +29,20 @@ type Service interface {
 type service struct {
 	CommentRepository repository.Comment
 	WorkRepository    repository.Work
+	UserRepository    repository.User
 
-	DB *gorm.DB
+	DB      *gorm.DB
+	DbRedis *redis.Client
 }
 
 func NewService(f *factory.Factory) Service {
 	return &service{
 		CommentRepository: f.CommentRepository,
 		WorkRepository:    f.WorkRepository,
+		UserRepository:    f.UserRepository,
 
-		DB: f.Db,
+		DB:      f.Db,
+		DbRedis: f.DbRedis,
 	}
 }
 
@@ -58,6 +66,11 @@ func (s *service) FindByWorkId(ctx *abstraction.Context, payload *dto.CommentFin
 
 	var res []map[string]interface{} = nil
 	for _, v := range data {
+		userDataUnreadComment := general.GetUserIdArrayFromKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(v.ID))
+		if slices.Contains(userDataUnreadComment, strconv.Itoa(ctx.Auth.ID)) {
+			general.RemoveUserIdFromKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(v.ID), ctx.Auth.ID)
+		}
+
 		res = append(res, map[string]interface{}{
 			"id":         v.ID,
 			"work_id":    v.WorkId,
@@ -101,6 +114,23 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.CommentCreateReq
 		}
 		if err := s.CommentRepository.Create(ctx, modelComment).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+
+		userAdmin, err := s.UserRepository.FindByRoleIdArr(ctx, constant.ROLE_ID_ADMIN, true)
+		if err != nil && err.Error() != "record not found" {
+			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+		if ctx.Auth.RoleID == constant.ROLE_ID_STAFF {
+			for _, v := range userAdmin {
+				general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(modelComment.ID), v.ID)
+			}
+		} else {
+			general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(modelComment.ID), workData.UserId)
+			for _, v := range userAdmin {
+				if v.ID != ctx.Auth.ID {
+					general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(modelComment.ID), v.ID)
+				}
+			}
 		}
 
 		return nil
@@ -149,14 +179,35 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.CommentUpdateReq
 			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "comment not found")
 		}
 
+		sendUnread := false
 		newCommentData := new(model.CommentEntityModel)
 		newCommentData.Context = ctx
 		newCommentData.ID = payload.ID
 		if payload.Comment != nil {
+			sendUnread = true
 			newCommentData.Comment = *payload.Comment
 		}
 		if err = s.CommentRepository.Update(ctx, newCommentData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+
+		if sendUnread {
+			userAdmin, err := s.UserRepository.FindByRoleIdArr(ctx, constant.ROLE_ID_ADMIN, true)
+			if err != nil && err.Error() != "record not found" {
+				return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+			}
+			if ctx.Auth.RoleID == constant.ROLE_ID_STAFF {
+				for _, v := range userAdmin {
+					general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(newCommentData.ID), v.ID)
+				}
+			} else {
+				general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(newCommentData.ID), commentData.Work.UserId)
+				for _, v := range userAdmin {
+					if v.ID != ctx.Auth.ID {
+						general.AppendUserIdToKeyRedis(s.DbRedis, general.GenerateRedisKeyUnreadComment(newCommentData.ID), v.ID)
+					}
+				}
+			}
 		}
 
 		return nil

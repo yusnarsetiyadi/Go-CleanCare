@@ -917,3 +917,43 @@ func ConvertDateTimeToIndonesian(datetimeStr string) string {
 
 	return formatted
 }
+
+func GenerateRedisKeyUnreadComment(commentId int) string {
+	return fmt.Sprintf(constant.REDIS_KEY_UNREAD_COMMENT, commentId)
+}
+
+func GetUserIdArrayFromKeyRedis(client *redis.Client, key string) []string {
+	val, err := client.Get(context.Background(), key).Result()
+	if err != nil || val == "" {
+		return []string{}
+	}
+	return strings.Split(val, "/")
+}
+
+func AppendUserIdToKeyRedis(client *redis.Client, key string, userId int) {
+	ctx := context.Background()
+	val, err := client.Get(ctx, key).Result()
+	if err != nil || val == "" {
+		client.Set(ctx, key, userId, 0)
+		return
+	}
+	updated := val + "/" + strconv.Itoa(userId)
+	client.Set(ctx, key, updated, 0)
+}
+
+func RemoveUserIdFromKeyRedis(client *redis.Client, key string, userId int) {
+	ctx := context.Background()
+	val, err := client.Get(ctx, key).Result()
+	if err != nil || val == "" {
+		return
+	}
+	uuids := strings.Split(val, "/")
+	var filtered []string
+	for _, uuid := range uuids {
+		if uuid != strconv.Itoa(userId) && uuid != "" {
+			filtered = append(filtered, uuid)
+		}
+	}
+	newVal := strings.Join(filtered, "/")
+	client.Set(ctx, key, newVal, 0)
+}

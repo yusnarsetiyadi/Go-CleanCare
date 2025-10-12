@@ -118,20 +118,39 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			email = *v.Email
 			verified = true
 		}
-		res = append(res, map[string]interface{}{
-			"id":         v.ID,
-			"number_id":  v.NumberId,
-			"name":       v.Name,
-			"email":      email,
-			"verified":   verified,
-			"is_delete":  v.IsDelete,
-			"created_at": general.FormatWithZWithoutChangingTime(v.CreatedAt),
-			"updated_at": general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
+
+		resUser := map[string]interface{}{
+			"id":           v.ID,
+			"number_id":    v.NumberId,
+			"name":         v.Name,
+			"email":        email,
+			"verified":     verified,
+			"is_delete":    v.IsDelete,
+			"created_at":   general.FormatWithZWithoutChangingTime(v.CreatedAt),
+			"updated_at":   general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
+			"profile":      v.Profile,
+			"profile_name": v.ProfileName,
 			"role": map[string]interface{}{
 				"id":   v.Role.ID,
 				"name": v.Role.Name,
 			},
-		})
+		}
+		if v.Profile != nil {
+			profile, err := gdrive.GetFile(s.sDrive, *v.Profile)
+			if err != nil {
+				return nil, response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "profile not found")
+			}
+			resUser["profile"] = map[string]interface{}{
+				// "view_saved": general.ConvertLinkToFileSaved(profile.WebContentLink, profile.Name, profile.FileExtension),
+				"view":    "https://lh3.googleusercontent.com/d/" + *v.Profile,
+				"content": profile.WebContentLink,
+				"ext":     profile.FileExtension,
+				"name":    profile.Name,
+				"id":      profile.Id,
+			}
+		}
+
+		res = append(res, resUser)
 	}
 	return map[string]interface{}{
 		"count": count,
