@@ -605,7 +605,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := "ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf"
+		filename := fmt.Sprintf("(%s) ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf", strings.ReplaceAll(reportDate, "-", ""))
 		return filename, &buf, "pdf", nil
 
 	} else {
@@ -662,7 +662,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 		if err := f.Write(&buf); err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		filename := fmt.Sprintf("ISS CleanCare - User Report (%s).xlsx", general.NowLocal().Format("2006-01-02"))
+		filename := fmt.Sprintf("(%s) ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx", strings.ReplaceAll(reportDate, "-", ""))
 		return filename, &buf, "excel", nil
 	}
 }

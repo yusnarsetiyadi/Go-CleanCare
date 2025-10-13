@@ -404,7 +404,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		pdf.SetMargins(10, 10, 10)
 		pdf.AddPage()
 		pdf.SetFont("Arial", "B", 16)
-		pdf.Cell(0, 10, "ISS CleanCare - Laporan Data Petugas Kebersihan")
+		pdf.Cell(0, 10, "ISS CleanCare - Laporan Data Pengguna")
 		pdf.Ln(12)
 		pdf.SetFont("Arial", "B", 10)
 		header := []string{
@@ -470,12 +470,12 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := "ISS CleanCare - Laporan Data Petugas Kebersihan.pdf"
+		filename := "ISS CleanCare - Laporan Data Pengguna.pdf"
 		return filename, &buf, "pdf", nil
 
 	} else {
 		f := excelize.NewFile()
-		sheet := "ISS CleanCare - Laporan Data Petugas Kebersihan"
+		sheet := "ISS CleanCare - Laporan Data Pengguna"
 		index, err := f.NewSheet(general.TruncateSheetName(sheet))
 		if err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
@@ -520,7 +520,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		if err := f.Write(&buf); err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		filename := "ISS CleanCare - Laporan Data Petugas Kebersihan.xlsx"
+		filename := "ISS CleanCare - Laporan Data Pengguna.xlsx"
 		return filename, &buf, "excel", nil
 	}
 }
