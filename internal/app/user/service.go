@@ -475,7 +475,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 
 	} else {
 		f := excelize.NewFile()
-		sheet := "ISS CleanCare - Laporan Data Pengguna"
+		sheet := "ISS CleanCare"
 		index, err := f.NewSheet(general.TruncateSheetName(sheet))
 		if err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
