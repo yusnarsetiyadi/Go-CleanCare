@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"iss_cleancare/internal/abstraction"
+	"cleancare/internal/abstraction"
 
 	"github.com/labstack/echo/v4"
 )

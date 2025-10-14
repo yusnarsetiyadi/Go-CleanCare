@@ -1,14 +1,14 @@
 package tipe
 
 import (
+	"cleancare/internal/abstraction"
+	"cleancare/internal/dto"
+	"cleancare/internal/factory"
+	"cleancare/internal/model"
+	"cleancare/internal/repository"
+	"cleancare/pkg/util/response"
+	"cleancare/pkg/util/trxmanager"
 	"errors"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/dto"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/util/response"
-	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
 
 	"gorm.io/gorm"

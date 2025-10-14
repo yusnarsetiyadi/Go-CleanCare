@@ -2,17 +2,17 @@ package work
 
 import (
 	"bytes"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/dto"
+	"cleancare/internal/factory"
+	"cleancare/internal/model"
+	"cleancare/internal/repository"
+	"cleancare/pkg/constant"
+	"cleancare/pkg/gdrive"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/response"
+	"cleancare/pkg/util/trxmanager"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/dto"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/constant"
-	"iss_cleancare/pkg/gdrive"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/response"
-	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
 	"slices"
 	"strconv"
@@ -529,7 +529,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 
 		pdf.SetFont("Arial", "B", 16)
 		pdf.Cell(0, 10, fmt.Sprintf(
-			"ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan (%s)",
+			"CleanCare - Laporan Pekerjaan Petugas Kebersihan (%s)",
 			general.ConvertDateToIndonesian(reportDate),
 		))
 		pdf.Ln(12)
@@ -605,12 +605,12 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := fmt.Sprintf("(%s) ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf", strings.ReplaceAll(reportDate, "-", ""))
+		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf", strings.ReplaceAll(reportDate, "-", ""))
 		return filename, &buf, "pdf", nil
 
 	} else {
 		f := excelize.NewFile()
-		sheet := "ISS CleanCare"
+		sheet := "CleanCare"
 		index, err := f.NewSheet(general.TruncateSheetName(sheet))
 		if err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
@@ -662,7 +662,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 		if err := f.Write(&buf); err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		filename := fmt.Sprintf("(%s) ISS CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx", strings.ReplaceAll(reportDate, "-", ""))
+		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx", strings.ReplaceAll(reportDate, "-", ""))
 		return filename, &buf, "excel", nil
 	}
 }

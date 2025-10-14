@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/middleware"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/trxmanager"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/config"
+	"cleancare/internal/factory"
+	"cleancare/internal/middleware"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/trxmanager"
 
 	"github.com/centrifugal/centrifuge"
 	"github.com/labstack/echo/v4"

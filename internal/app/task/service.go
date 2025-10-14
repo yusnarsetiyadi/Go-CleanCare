@@ -1,10 +1,10 @@
 package task
 
 import (
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/util/response"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/factory"
+	"cleancare/internal/repository"
+	"cleancare/pkg/util/response"
 	"net/http"
 
 	"gorm.io/gorm"

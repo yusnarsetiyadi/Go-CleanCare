@@ -1,10 +1,10 @@
 package factory
 
 import (
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/constant"
-	"iss_cleancare/pkg/database"
-	"iss_cleancare/pkg/gdrive"
+	"cleancare/internal/repository"
+	"cleancare/pkg/constant"
+	"cleancare/pkg/database"
+	"cleancare/pkg/gdrive"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"

@@ -1,12 +1,12 @@
 package token
 
 import (
+	"cleancare/internal/abstraction"
+	"cleancare/internal/config"
+	"cleancare/pkg/util/aescrypt"
+	"cleancare/pkg/util/encoding"
 	"errors"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/pkg/util/aescrypt"
-	"iss_cleancare/pkg/util/encoding"
 	"strconv"
 
 	"github.com/golang-jwt/jwt/v4"

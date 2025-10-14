@@ -1,9 +1,9 @@
 package trxmanager
 
 import (
+	"cleancare/internal/abstraction"
 	"errors"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
 	"runtime/debug"
 
 	"github.com/sirupsen/logrus"

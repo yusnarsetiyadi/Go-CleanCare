@@ -8,8 +8,8 @@ COPY ./ /app
 
 RUN go mod tidy
 
-RUN go build -o iss_cleancare
+RUN go build -o cleancare
 
 EXPOSE 80
 
-CMD [ "./iss_cleancare" ]
+CMD [ "./cleancare" ]

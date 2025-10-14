@@ -1,9 +1,9 @@
 package database
 
 import (
+	"cleancare/internal/config"
 	"errors"
 	"fmt"
-	"iss_cleancare/internal/config"
 	"strings"
 
 	"github.com/sirupsen/logrus"

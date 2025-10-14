@@ -1,7 +1,7 @@
 package tipe
 
 import (
-	"iss_cleancare/internal/middleware"
+	"cleancare/internal/middleware"
 
 	"github.com/labstack/echo/v4"
 )

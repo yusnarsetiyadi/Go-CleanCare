@@ -1,7 +1,7 @@
 package constant
 
 const (
-	DRIVE_FOLDER = "ISS_CleanCare_App"
+	DRIVE_FOLDER = "CleanCare_App"
 
 	ROLE_ID_ADMIN                             = 1
 	ROLE_ID_STAFF                             = 2
@@ -20,7 +20,7 @@ const (
 
 	PATH_FILE_SAVED    = "../file_saved"
 	PATH_ASSETS_IMAGES = "assets/images"
-	PATH_SHARE         = "/var/www/html/iss_cleancare/share"
+	PATH_SHARE         = "/var/www/html/cleancare/share"
 )
 
 var (

@@ -1,15 +1,15 @@
 package main
 
 import (
+	"cleancare/internal/config"
+	"cleancare/internal/factory"
+	httpcleancare "cleancare/internal/http"
+	middlewareEcho "cleancare/internal/middleware"
+	db "cleancare/pkg/database"
+	"cleancare/pkg/log"
+	"cleancare/pkg/ngrok"
+	"cleancare/pkg/ws"
 	"context"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/internal/factory"
-	httpiss_cleancare "iss_cleancare/internal/http"
-	middlewareEcho "iss_cleancare/internal/middleware"
-	db "iss_cleancare/pkg/database"
-	"iss_cleancare/pkg/log"
-	"iss_cleancare/pkg/ngrok"
-	"iss_cleancare/pkg/ws"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,9 +20,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// @title iss_cleancare
+// @title cleancare
 // @version 1.0.0
-// @description This is a doc for iss_cleancare
+// @description This is a doc for cleancare
 
 func main() {
 	config.Init()
@@ -37,7 +37,7 @@ func main() {
 
 	middlewareEcho.Init(e, f.DbRedis)
 
-	httpiss_cleancare.Init(e, f)
+	httpcleancare.Init(e, f)
 
 	ch := make(chan os.Signal, 1)
 

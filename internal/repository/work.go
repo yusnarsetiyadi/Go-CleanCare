@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/pkg/util/general"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/model"
+	"cleancare/pkg/util/general"
 	"strings"
 
 	"gorm.io/gorm"

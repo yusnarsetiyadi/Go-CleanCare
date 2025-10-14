@@ -1,4 +1,4 @@
-module iss_cleancare
+module cleancare
 
 go 1.24.3
 

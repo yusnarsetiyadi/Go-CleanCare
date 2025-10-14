@@ -1,11 +1,11 @@
 package auth
 
 import (
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/dto"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/response"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/dto"
+	"cleancare/internal/factory"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/response"
 	"net/http"
 	"strings"
 

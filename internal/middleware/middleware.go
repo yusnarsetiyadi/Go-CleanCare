@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"cleancare/internal/config"
+	"cleancare/pkg/util/validator"
 	"fmt"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/pkg/util/validator"
 	"net/http"
 	"os"
 

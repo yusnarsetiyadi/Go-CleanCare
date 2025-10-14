@@ -1,7 +1,7 @@
 package model
 
 import (
-	"iss_cleancare/internal/abstraction"
+	"cleancare/internal/abstraction"
 
 	"gorm.io/gorm"
 )

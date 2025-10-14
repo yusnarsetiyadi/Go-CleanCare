@@ -52,6 +52,6 @@ jobs:
               --name ${{vars.DOCKER_CONTAINER}} \
               -d \
               -p ${{vars.DOCKER_PORT}}:${{vars.DOCKER_PORT}} \
-              -v /var/www/html/iss_cleancare/share:/var/www/html/iss_cleancare/share \
-              --env-file /var/www/html/iss_cleancare/.env \
+              -v /var/www/html/cleancare/share:/var/www/html/cleancare/share \
+              --env-file /var/www/html/cleancare/.env \
               ${{vars.DOCKER_IMAGE}}

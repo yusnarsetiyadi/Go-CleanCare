@@ -1,10 +1,10 @@
 package task
 
 import (
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/app/task/tipe"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/pkg/util/response"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/app/task/tipe"
+	"cleancare/internal/factory"
+	"cleancare/pkg/util/response"
 
 	"github.com/labstack/echo/v4"
 )

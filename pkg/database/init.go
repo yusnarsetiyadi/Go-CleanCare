@@ -1,8 +1,8 @@
 package database
 
 import (
+	"cleancare/internal/config"
 	"fmt"
-	"iss_cleancare/internal/config"
 	"strconv"
 
 	"gorm.io/driver/mysql"

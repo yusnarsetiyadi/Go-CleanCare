@@ -2,12 +2,12 @@ package general
 
 import (
 	"bytes"
+	"cleancare/internal/abstraction"
+	"cleancare/pkg/constant"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/pkg/constant"
 	"math"
 	"math/rand"
 	"net/http"

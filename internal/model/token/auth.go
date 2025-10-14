@@ -1,6 +1,7 @@
 package token
 
 import (
+	"cleancare/internal/config"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -8,7 +9,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
-	"iss_cleancare/internal/config"
 
 	"github.com/golang-jwt/jwt/v4"
 )

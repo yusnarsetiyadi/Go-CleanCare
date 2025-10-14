@@ -1,9 +1,9 @@
 package dto
 
 import (
+	"cleancare/internal/config"
+	modeltoken "cleancare/internal/model/token"
 	"fmt"
-	"iss_cleancare/internal/config"
-	modeltoken "iss_cleancare/internal/model/token"
 	"mime/multipart"
 
 	"github.com/golang-jwt/jwt"

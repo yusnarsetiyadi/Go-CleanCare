@@ -1,9 +1,9 @@
 package gomail
 
 import (
+	"cleancare/internal/config"
+	"cleancare/pkg/util/general"
 	"errors"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/pkg/util/general"
 	"strconv"
 
 	"github.com/sirupsen/logrus"

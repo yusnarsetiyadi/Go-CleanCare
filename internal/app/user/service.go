@@ -2,17 +2,17 @@ package user
 
 import (
 	"bytes"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/dto"
+	"cleancare/internal/factory"
+	"cleancare/internal/model"
+	"cleancare/internal/repository"
+	"cleancare/pkg/constant"
+	"cleancare/pkg/gdrive"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/response"
+	"cleancare/pkg/util/trxmanager"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/dto"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/constant"
-	"iss_cleancare/pkg/gdrive"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/response"
-	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
 
 	"github.com/go-redis/redis/v8"
@@ -404,7 +404,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		pdf.SetMargins(10, 10, 10)
 		pdf.AddPage()
 		pdf.SetFont("Arial", "B", 16)
-		pdf.Cell(0, 10, "ISS CleanCare - Laporan Data Pengguna")
+		pdf.Cell(0, 10, "CleanCare - Laporan Data Pengguna")
 		pdf.Ln(12)
 		pdf.SetFont("Arial", "B", 10)
 		header := []string{
@@ -470,12 +470,12 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := "ISS CleanCare - Laporan Data Pengguna.pdf"
+		filename := "CleanCare - Laporan Data Pengguna.pdf"
 		return filename, &buf, "pdf", nil
 
 	} else {
 		f := excelize.NewFile()
-		sheet := "ISS CleanCare"
+		sheet := "CleanCare"
 		index, err := f.NewSheet(general.TruncateSheetName(sheet))
 		if err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
@@ -520,7 +520,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		if err := f.Write(&buf); err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		filename := "ISS CleanCare - Laporan Data Pengguna.xlsx"
+		filename := "CleanCare - Laporan Data Pengguna.xlsx"
 		return filename, &buf, "excel", nil
 	}
 }

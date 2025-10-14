@@ -1,6 +1,6 @@
 package model
 
-import "iss_cleancare/internal/abstraction"
+import "cleancare/internal/abstraction"
 
 type TaskEntity struct {
 	Name string `json:"name"`

@@ -11,12 +11,12 @@ import (
 	"sync"
 	"time"
 
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/pkg/database"
-	"iss_cleancare/pkg/gomail"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/response"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/model"
+	"cleancare/pkg/database"
+	"cleancare/pkg/gomail"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/response"
 
 	"github.com/labstack/echo/v4"
 	echoMiddleware "github.com/labstack/echo/v4/middleware"

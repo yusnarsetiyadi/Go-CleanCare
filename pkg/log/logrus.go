@@ -1,7 +1,7 @@
 package log
 
 import (
-	"iss_cleancare/internal/config"
+	"cleancare/internal/config"
 	"os"
 	"strconv"
 

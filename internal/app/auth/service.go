@@ -1,24 +1,24 @@
 package auth
 
 import (
+	"cleancare/internal/abstraction"
+	"cleancare/internal/config"
+	"cleancare/internal/dto"
+	"cleancare/internal/factory"
+	"cleancare/internal/model"
+	modelToken "cleancare/internal/model/token"
+	"cleancare/internal/repository"
+	"cleancare/pkg/constant"
+	"cleancare/pkg/gdrive"
+	"cleancare/pkg/gomail"
+	"cleancare/pkg/util/aescrypt"
+	"cleancare/pkg/util/encoding"
+	"cleancare/pkg/util/general"
+	"cleancare/pkg/util/response"
+	"cleancare/pkg/util/trxmanager"
 	"context"
 	"errors"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/config"
-	"iss_cleancare/internal/dto"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/internal/model"
-	modelToken "iss_cleancare/internal/model/token"
-	"iss_cleancare/internal/repository"
-	"iss_cleancare/pkg/constant"
-	"iss_cleancare/pkg/gdrive"
-	"iss_cleancare/pkg/gomail"
-	"iss_cleancare/pkg/util/aescrypt"
-	"iss_cleancare/pkg/util/encoding"
-	"iss_cleancare/pkg/util/general"
-	"iss_cleancare/pkg/util/response"
-	"iss_cleancare/pkg/util/trxmanager"
 	"net/http"
 	"time"
 
@@ -231,7 +231,7 @@ func (s *service) SendEmailForgotPassword(ctx *abstraction.Context, payload *dto
 
 		s.DbRedis.Set(context.Background(), *token, *token, 0)
 
-		if err = gomail.SendMail(*data.Email, "Forgot Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
+		if err = gomail.SendMail(*data.Email, "Forgot Password for CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_forgot_password.html", struct {
 			NAME  string
 			EMAIL string
 			LINK  string
@@ -292,7 +292,7 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		if err = gomail.SendMail(*userData.Email, "Reset Password for ISS CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
+		if err = gomail.SendMail(*userData.Email, "Reset Password for CleanCare", general.ParseTemplateEmailToHtml("./assets/html/email/notif_reset_password.html", struct {
 			NAME      string
 			RESETNAME string
 			NUMBERID  string

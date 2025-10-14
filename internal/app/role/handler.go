@@ -1,9 +1,9 @@
 package role
 
 import (
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/factory"
-	"iss_cleancare/pkg/util/response"
+	"cleancare/internal/abstraction"
+	"cleancare/internal/factory"
+	"cleancare/pkg/util/response"
 
 	"github.com/labstack/echo/v4"
 )

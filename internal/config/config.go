@@ -1,8 +1,8 @@
 package config
 
 import (
+	"cleancare/pkg/constant"
 	"fmt"
-	"iss_cleancare/pkg/constant"
 	"os"
 	"sync"
 
@@ -76,7 +76,7 @@ func Get() *Configuration {
 
 func Init() *Configuration {
 
-	if err := godotenv.Load("local.env", "/var/www/html/iss_cleancare/.env"); err != nil {
+	if err := godotenv.Load("local.env", "/var/www/html/cleancare/.env"); err != nil {
 		fmt.Println(err.Error())
 	}
 

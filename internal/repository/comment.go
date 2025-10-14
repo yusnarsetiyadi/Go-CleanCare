@@ -1,10 +1,10 @@
 package repository
 
 import (
+	"cleancare/internal/abstraction"
+	"cleancare/internal/model"
+	"cleancare/pkg/util/general"
 	"fmt"
-	"iss_cleancare/internal/abstraction"
-	"iss_cleancare/internal/model"
-	"iss_cleancare/pkg/util/general"
 
 	"gorm.io/gorm"
 )

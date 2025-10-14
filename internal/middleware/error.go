@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	res "iss_cleancare/pkg/util/response"
+	res "cleancare/pkg/util/response"
 	"net/http"
 
 	"github.com/labstack/echo/v4"

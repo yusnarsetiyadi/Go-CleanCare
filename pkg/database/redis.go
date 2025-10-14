@@ -1,8 +1,8 @@
 package database
 
 import (
+	"cleancare/internal/config"
 	"fmt"
-	"iss_cleancare/internal/config"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
