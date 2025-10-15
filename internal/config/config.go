@@ -84,9 +84,9 @@ func Init() *Configuration {
 	fmt.Println("run: " + env)
 
 	if env == "development" {
-		constant.BASE_URL = "https://yusnar.my.id/go-iss-cleancare"
+		constant.BASE_URL = "https://yusnar.my.id/go-cleancare"
 	} else if env == "production" {
-		constant.BASE_URL = "https://yusnar.my.id/go-iss-cleancare"
+		constant.BASE_URL = "https://yusnar.my.id/go-cleancare"
 	} else {
 		constant.BASE_URL = "http://localhost:2000"
 	}

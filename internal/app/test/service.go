@@ -32,7 +32,7 @@ type service struct {
 func NewService(f *factory.Factory) Service {
 	db := f.Db
 	sDrive := f.GDrive.Service
-	fDrive := f.GDrive.FolderIss
+	fDrive := f.GDrive.FolderCleanCare
 	return &service{
 		db,
 		sDrive,

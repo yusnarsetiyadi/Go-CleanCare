@@ -32,8 +32,8 @@ type Repository_initiated struct {
 }
 
 type GoogleDrive struct {
-	Service   *drive.Service
-	FolderIss *drive.File
+	Service         *drive.Service
+	FolderCleanCare *drive.File
 }
 
 func NewFactory() *Factory {
@@ -72,12 +72,12 @@ func (f *Factory) SetupGoogleDrive() {
 	if err != nil {
 		panic("Failed setup gdrive, connection is undefined")
 	}
-	folderIss, err := gdrive.InitFolder(service, constant.DRIVE_FOLDER, "root")
+	folderCleanCare, err := gdrive.InitFolder(service, constant.DRIVE_FOLDER, "root")
 	if err != nil {
 		logrus.Infof("Failed setup folder %s, cause: %s", constant.DRIVE_FOLDER, err.Error())
 	}
 	f.GDrive.Service = service
-	f.GDrive.FolderIss = folderIss
+	f.GDrive.FolderCleanCare = folderCleanCare
 }
 
 func (f *Factory) SetupRepository() {

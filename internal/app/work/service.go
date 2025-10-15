@@ -60,7 +60,7 @@ func NewService(f *factory.Factory) Service {
 		DB:      f.Db,
 		DbRedis: f.DbRedis,
 		sDrive:  f.GDrive.Service,
-		fDrive:  f.GDrive.FolderIss,
+		fDrive:  f.GDrive.FolderCleanCare,
 	}
 }
 
