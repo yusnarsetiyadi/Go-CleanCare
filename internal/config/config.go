@@ -83,11 +83,12 @@ func Init() *Configuration {
 	env := os.Getenv("ENV")
 	fmt.Println("run: " + env)
 
-	if env == "development" {
+	switch env {
+	case "development":
 		constant.BASE_URL = "https://yusnar.my.id/go-cleancare"
-	} else if env == "production" {
+	case "production":
 		constant.BASE_URL = "https://yusnar.my.id/go-cleancare"
-	} else {
+	default:
 		constant.BASE_URL = "http://localhost:2000"
 	}
 
