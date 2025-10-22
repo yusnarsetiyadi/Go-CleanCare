@@ -9,8 +9,10 @@ const (
 	TASK_ID_SERVICE                           = 2
 	REDIS_REQUEST_RESET_PASSWORD_IP_KEYS      = "cleancare-reset-password:ip:%s"
 	REDIS_REQUEST_VERIFY_NUMBER_IP_KEYS       = "cleancare-verify-mumber:ip:%s"
+	REDIS_REQUEST_REGISTER_IP_KEYS            = "cleancare-register:ip:%s"
 	REDIS_REQUEST_MAX_ATTEMPTS_RESET_PASSWORD = 5
 	REDIS_REQUEST_MAX_ATTEMPTS_VERIFY_NUMBER  = 10
+	REDIS_REQUEST_MAX_ATTEMPTS_REGISTER       = 10
 	REDIS_REQUEST_IP_EXPIRE                   = 240
 	REDIS_KEY_USER_LOGIN                      = "cleancare_login_token_user_"
 	REDIS_KEY_AUTO_LOGOUT                     = "cleancare_user_auto_logout"

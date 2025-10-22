@@ -64,3 +64,30 @@ func VerifyNumberIpCheck(next echo.HandlerFunc) echo.HandlerFunc {
 		return next(c)
 	}
 }
+
+func RegisterIpCheck(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+
+		ip := c.RealIP()
+		if ip == "::1" {
+			ip = "localhost"
+		}
+
+		keys := fmt.Sprintf(constant.REDIS_REQUEST_REGISTER_IP_KEYS, ip)
+		value := dbRedis.Incr(c.Request().Context(), keys)
+		if value.Err() != nil {
+			return response.ErrorResponse(value.Err()).SendError(c)
+		}
+
+		if value.Val() > constant.REDIS_REQUEST_MAX_ATTEMPTS_REGISTER {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("can't proceed request"), "too many attempts, please try again in 4 hours").SendError(c)
+		}
+
+		errRedis := dbRedis.Expire(c.Request().Context(), keys, constant.REDIS_REQUEST_IP_EXPIRE*time.Minute)
+		if errRedis.Err() != nil {
+			return response.ErrorResponse(errRedis.Err()).SendError(c)
+		}
+
+		return next(c)
+	}
+}

@@ -13,5 +13,5 @@ func (h *handler) Route(v *echo.Group) {
 	v.POST("/send-email/forgot-password", h.SendEmailForgotPassword, middleware.ResetPasswordIpCheck)
 	v.GET("/validation/reset-password/:token", h.ValidationResetPassword)
 	v.POST("/verify-number", h.VerifyNumber, middleware.VerifyNumberIpCheck)
-	v.POST("/register", h.Register)
+	v.POST("/register", h.Register, middleware.RegisterIpCheck)
 }
