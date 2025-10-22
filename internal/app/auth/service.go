@@ -76,7 +76,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		if err != nil && err.Error() != "record not found" {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		if data == nil {
+		if data == nil || data.Email == nil {
 			return response.ErrorBuilder(http.StatusUnauthorized, errors.New("unauthorized"), "number id or password is incorrect")
 		}
 
