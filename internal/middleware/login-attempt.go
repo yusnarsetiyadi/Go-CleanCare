@@ -14,8 +14,6 @@ import (
 	"cleancare/internal/abstraction"
 	"cleancare/internal/model"
 	"cleancare/pkg/database"
-	"cleancare/pkg/gomail"
-	"cleancare/pkg/util/general"
 	"cleancare/pkg/util/response"
 
 	"github.com/labstack/echo/v4"
@@ -27,11 +25,11 @@ type LoginAttemptStore interface {
 	// It returns a boolean indicating if the user is allowed,
 	// a float64 representing the number of seconds to wait before retrying if login is not allowed, and
 	// an error if there are too many login attempts.
-	Allow(identifier string, email string) (bool, float64, error)
+	Allow(identifier string, number_id string) (bool, float64, error)
 
 	// This method increments the login attempt count for a given identifier and updates the user's last seen time.
 	// It takes an echo.Context object representing the HTTP request context and returns an error object if there was an error during the process.
-	IncreaseAttempt(c echo.Context, identifier string, email string) error
+	IncreaseAttempt(c echo.Context, identifier string, number_id string) error
 }
 
 /*
@@ -171,7 +169,7 @@ func LoginAttemptWithConfig(config LoginAttemptConfig) echo.MiddlewareFunc {
 			_ = json.Unmarshal(reqBody, &parsedReq)
 
 			// check if request is allowed
-			if allow, retryAfterSeconds, err = config.Store.Allow(identifier, fmt.Sprint(parsedReq["email"])); err != nil || !allow {
+			if allow, retryAfterSeconds, err = config.Store.Allow(identifier, fmt.Sprint(parsedReq["number_id"])); err != nil || !allow {
 				if retryAfterSeconds != 0 {
 					return response.ErrorResponse(config.DenyHandler(c, identifier, err)).SendError(c)
 				}
@@ -184,7 +182,7 @@ func LoginAttemptWithConfig(config LoginAttemptConfig) echo.MiddlewareFunc {
 			}
 
 			// increase attempt count
-			if err = config.Store.IncreaseAttempt(c, identifier, fmt.Sprint(parsedReq["email"])); err != nil {
+			if err = config.Store.IncreaseAttempt(c, identifier, fmt.Sprint(parsedReq["number_id"])); err != nil {
 				return response.ErrorResponse(config.DenyHandler(c, identifier, err)).SendError(c)
 			}
 			return
@@ -277,16 +275,16 @@ func NewLoginAttemptMemoryStoreWithConfig(config LoginAttemptMemoryStoreConfig) 
 //
 // Parameters:
 // - identifier: a string representing the identifier of the user.
-// - email: a string representing the email of the user.
+// - number_id: a string representing the number_id of the user.
 // Returns:
 // - bool: true if the user is allowed to login, false otherwise.
 // - float64: the number of seconds to wait before retrying if login is not allowed.
 // - error: an error if there are too many login attempts, nil otherwise.
-func (store *LoginAttemptMemoryStore) Allow(identifier string, email string) (bool, float64, error) {
+func (store *LoginAttemptMemoryStore) Allow(identifier string, number_id string) (bool, float64, error) {
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 
-	key := fmt.Sprintf("%v:%v", identifier, email)
+	key := fmt.Sprintf("%v:%v", identifier, number_id)
 	user, exists := store.users[key]
 	if !exists {
 		user = new(User)
@@ -316,16 +314,16 @@ func (store *LoginAttemptMemoryStore) Allow(identifier string, email string) (bo
 // Parameters:
 // - c: an echo.Context object representing the HTTP request context.
 // - identifier: a string representing the identifier of the user.
-// - email: a string representing the email of the user.
+// - number_id: a string representing the number_id of the user.
 //
 // Returns:
 // - error: an error object if there was an error during the process, otherwise nil.
-func (store *LoginAttemptMemoryStore) IncreaseAttempt(c echo.Context, identifier string, email string) (err error) {
+func (store *LoginAttemptMemoryStore) IncreaseAttempt(c echo.Context, identifier string, number_id string) (err error) {
 	conn, _ := database.Connection("MYSQL")
 	store.mutex.Lock()
 	defer store.mutex.Unlock()
 
-	key := fmt.Sprintf("%v:%v", identifier, email)
+	key := fmt.Sprintf("%v:%v", identifier, number_id)
 	user, exists := store.users[key]
 	if !exists {
 		user = new(User)
@@ -333,7 +331,7 @@ func (store *LoginAttemptMemoryStore) IncreaseAttempt(c echo.Context, identifier
 	}
 
 	var userEntityModel *model.UserEntityModel
-	if err = conn.Model(&model.UserEntityModel{}).Where("email = ?", email).Find(&userEntityModel).Error; err != nil {
+	if err = conn.Model(&model.UserEntityModel{}).Where("number_id = ?", number_id).Find(&userEntityModel).Error; err != nil {
 		return
 	}
 	userEntityModel.Context = &abstraction.Context{
@@ -353,17 +351,7 @@ func (store *LoginAttemptMemoryStore) IncreaseAttempt(c echo.Context, identifier
 		if user.Attempts >= store.maxAttempts {
 			switch user.LockDuration {
 			case 1 * time.Minute:
-				user.LockDuration = 15 * time.Minute
-			case 15 * time.Minute:
-				err = conn.Model(userEntityModel).Where("email = ?", email).Update("is_locked", true).Error
-				err = gomail.SendMail(email, "Account Locked for SelarasHomeId", general.ParseTemplateEmailToHtml("./assets/html/email/notif_locked_user.html", struct {
-					NAME  string
-					EMAIL string
-				}{
-					NAME:  userEntityModel.Name,
-					EMAIL: *userEntityModel.Email,
-				}))
-				user.Locked = true
+				user.LockDuration = 5 * time.Minute
 			default:
 				user.LockDuration = 1 * time.Minute
 			}
