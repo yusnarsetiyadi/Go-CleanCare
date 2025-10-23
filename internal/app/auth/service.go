@@ -283,10 +283,11 @@ func (s *service) ValidationResetPassword(ctx *abstraction.Context, payload *dto
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
+		hashPwStr := string(hashedPassword)
 		newUserData := new(model.UserEntityModel)
 		newUserData.Context = ctx
 		newUserData.ID = userData.ID
-		*newUserData.Password = string(hashedPassword)
+		newUserData.Password = &hashPwStr
 
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
