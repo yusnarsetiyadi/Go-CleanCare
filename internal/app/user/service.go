@@ -445,8 +445,8 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 				verified,
 			}
 			startY := pdf.GetY()
+			startX := pdf.GetX()
 			maxHeight := 0.0
-
 			for j, txt := range row {
 				lines := pdf.SplitLines([]byte(txt), colWidths[j])
 				h := float64(len(lines)) * 5
@@ -454,15 +454,16 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 					maxHeight = h
 				}
 			}
-			xStart := pdf.GetX()
+
 			for j, txt := range row {
 				x := pdf.GetX()
 				y := pdf.GetY()
-
-				pdf.MultiCell(colWidths[j], 5, txt, "1", "", false)
+				pdf.Rect(x, y, colWidths[j], maxHeight, "")
+				pdf.SetXY(x, y)
+				pdf.MultiCell(colWidths[j], 5, txt, "", "", false)
 				pdf.SetXY(x+colWidths[j], y)
 			}
-			pdf.SetXY(xStart, startY+maxHeight)
+			pdf.SetXY(startX, startY+maxHeight)
 		}
 
 		var buf bytes.Buffer
@@ -482,38 +483,68 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		}
 		f.DeleteSheet("Sheet1")
 		f.SetActiveSheet(index)
-		f.SetCellValue(sheet, "A1", "No")
-		f.SetCellValue(sheet, "B1", "Nomor ID")
-		f.SetCellValue(sheet, "C1", "Nama")
-		f.SetCellValue(sheet, "D1", "Email")
-		f.SetCellValue(sheet, "E1", "Jabatan")
-		f.SetCellValue(sheet, "F1", "Tanggal Terdaftar")
-		f.SetCellValue(sheet, "G1", "Status Verifikasi")
+
+		headers := []string{"No", "Nomor ID", "Nama", "Email", "Jabatan", "Tanggal Terdaftar", "Status Verifikasi"}
+		for i, h := range headers {
+			col := string(rune('A' + i))
+			cell := fmt.Sprintf("%s1", col)
+			f.SetCellValue(sheet, cell, h)
+		}
+
+		maxLens := make([]int, len(headers))
+		for i, h := range headers {
+			maxLens[i] = len(h)
+		}
 		for i, v := range data {
-			colA := fmt.Sprintf("A%d", i+2)
-			colB := fmt.Sprintf("B%d", i+2)
-			colC := fmt.Sprintf("C%d", i+2)
-			colD := fmt.Sprintf("D%d", i+2)
-			colE := fmt.Sprintf("E%d", i+2)
-			colF := fmt.Sprintf("F%d", i+2)
-			colG := fmt.Sprintf("G%d", i+2)
+			row := i + 2
 			no := i + 1
-			f.SetCellValue(sheet, colA, no)
-			f.SetCellValue(sheet, colB, v.NumberId)
-			f.SetCellValue(sheet, colC, v.Name)
+
+			values := make([]string, len(headers))
+			values[0] = fmt.Sprintf("%d", no)
+			values[1] = v.NumberId
+			values[2] = v.Name
+
 			if v.Email == nil {
-				f.SetCellValue(sheet, colD, "-")
-				f.SetCellValue(sheet, colG, "Belum")
+				values[3] = "-"
+				values[6] = "Belum"
 			} else {
-				f.SetCellValue(sheet, colD, *v.Email)
-				f.SetCellValue(sheet, colG, "Sudah")
+				values[3] = *v.Email
+				values[6] = "Sudah"
 			}
 			if v.RoleId == constant.ROLE_ID_STAFF {
-				f.SetCellValue(sheet, colE, "Petugas Kebersihan")
+				values[4] = "Petugas Kebersihan"
 			} else {
-				f.SetCellValue(sheet, colE, "Supervisor")
+				values[4] = "Supervisor"
 			}
-			f.SetCellValue(sheet, colF, general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")))
+
+			values[5] = general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05"))
+
+			for j, val := range values {
+				col := string(rune('A' + j))
+				cell := fmt.Sprintf("%s%d", col, row)
+				f.SetCellValue(sheet, cell, val)
+				if len(val) > maxLens[j] {
+					maxLens[j] = len(val)
+				}
+			}
+		}
+
+		for i, length := range maxLens {
+			col := string(rune('A' + i))
+			width := float64(length)*1.2 + 2
+			if width < 8 {
+				width = 8
+			}
+			if width > 60 {
+				width = 60
+			}
+			if err := f.SetColWidth(sheet, col, col, width); err != nil {
+				return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+			}
+		}
+
+		if err := f.AutoFilter(sheet, "E1:G1", nil); err != nil {
+			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
 		var buf bytes.Buffer

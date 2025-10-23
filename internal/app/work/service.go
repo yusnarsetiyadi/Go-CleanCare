@@ -324,13 +324,14 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.WorkFindByIDRe
 			"updated_at":   general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 		}
 		if data.ImageBefore != nil {
-			image_before, err := gdrive.GetFile(s.sDrive, *data.ImageBefore)
+			imageBeforeFile, _ := general.SplitFileAndNameWithDelimiter(*data.ImageBefore)
+			image_before, err := gdrive.GetFile(s.sDrive, imageBeforeFile)
 			if err != nil {
 				return nil, response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "image_before not found")
 			}
 			res["image_before"] = map[string]interface{}{
 				// "view_saved": general.ConvertLinkToFileSaved(image_before.WebContentLink, image_before.Name, image_before.FileExtension),
-				"view":    "https://lh3.googleusercontent.com/d/" + *data.ImageBefore,
+				"view":    "https://lh3.googleusercontent.com/d/" + imageBeforeFile,
 				"content": image_before.WebContentLink,
 				"ext":     image_before.FileExtension,
 				"name":    image_before.Name,
@@ -338,13 +339,14 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.WorkFindByIDRe
 			}
 		}
 		if data.ImageAfter != nil {
-			image_after, err := gdrive.GetFile(s.sDrive, *data.ImageAfter)
+			imageAfterFile, _ := general.SplitFileAndNameWithDelimiter(*data.ImageAfter)
+			image_after, err := gdrive.GetFile(s.sDrive, imageAfterFile)
 			if err != nil {
 				return nil, response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "image_after not found")
 			}
 			res["image_after"] = map[string]interface{}{
 				// "view_saved": general.ConvertLinkToFileSaved(image_after.WebContentLink, image_after.Name, image_after.FileExtension),
-				"view":    "https://lh3.googleusercontent.com/d/" + *data.ImageAfter,
+				"view":    "https://lh3.googleusercontent.com/d/" + imageAfterFile,
 				"content": image_after.WebContentLink,
 				"ext":     image_after.FileExtension,
 				"name":    image_after.Name,
@@ -560,10 +562,12 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			linkImageAfter := ""
 
 			if v.ImageBefore != nil {
-				linkImageBefore = "https://lh3.googleusercontent.com/d/" + *v.ImageBefore
+				imageBeforeFile, _ := general.SplitFileAndNameWithDelimiter(*v.ImageBefore)
+				linkImageBefore = "https://lh3.googleusercontent.com/d/" + imageBeforeFile
 			}
 			if v.ImageAfter != nil {
-				linkImageAfter = "https://lh3.googleusercontent.com/d/" + *v.ImageAfter
+				imageAfterFile, _ := general.SplitFileAndNameWithDelimiter(*v.ImageAfter)
+				linkImageAfter = "https://lh3.googleusercontent.com/d/" + imageAfterFile
 			}
 
 			row := []string{
@@ -594,7 +598,23 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			for j, txt := range row {
 				y := pdf.GetY()
 				pdf.Rect(x, y, colWidths[j], maxHeight, "D")
-				pdf.MultiCell(colWidths[j], 5, txt, "", "", false)
+
+				if (j == 6 || j == 7) && txt != "" {
+					pdf.SetTextColor(0, 0, 255)
+					lines := pdf.SplitLines([]byte(txt), colWidths[j])
+					lineHeight := 5.0
+					textY := y
+					for _, line := range lines {
+						pdf.SetXY(x, textY)
+						pdf.CellFormat(colWidths[j], lineHeight, string(line), "", 0, "", false, 0, txt)
+						textY += lineHeight
+					}
+					pdf.SetTextColor(0, 0, 0)
+				} else {
+					pdf.SetXY(x, y)
+					pdf.MultiCell(colWidths[j], 5, txt, "", "", false)
+				}
+
 				x += colWidths[j]
 				pdf.SetXY(x, y)
 			}
@@ -617,52 +637,102 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 		}
 		f.DeleteSheet("Sheet1")
 		f.SetActiveSheet(index)
-		f.SetCellValue(sheet, "A1", "No")
-		f.SetCellValue(sheet, "B1", "Petugas Kebersihan")
-		f.SetCellValue(sheet, "C1", "Pekerjaan")
-		f.SetCellValue(sheet, "D1", "Jenis Pekerjaan")
-		f.SetCellValue(sheet, "E1", "Lantai")
-		f.SetCellValue(sheet, "F1", "Keterangan")
-		f.SetCellValue(sheet, "G1", "Sebelum")
-		f.SetCellValue(sheet, "H1", "Sesudah")
-		f.SetCellValue(sheet, "I1", "Tanggal")
+
+		headers := []string{
+			"No", "Petugas Kebersihan", "Pekerjaan", "Jenis Pekerjaan",
+			"Lantai", "Keterangan", "Sebelum", "Sesudah", "Tanggal",
+		}
+		for i, h := range headers {
+			col := string(rune('A' + i))
+			cell := fmt.Sprintf("%s1", col)
+			f.SetCellValue(sheet, cell, h)
+		}
+
+		maxLens := make([]int, len(headers))
+		for i, h := range headers {
+			maxLens[i] = len(h)
+		}
+
 		for i, v := range data {
-			colA := fmt.Sprintf("A%d", i+2)
-			colB := fmt.Sprintf("B%d", i+2)
-			colC := fmt.Sprintf("C%d", i+2)
-			colD := fmt.Sprintf("D%d", i+2)
-			colE := fmt.Sprintf("E%d", i+2)
-			colF := fmt.Sprintf("F%d", i+2)
-			colG := fmt.Sprintf("G%d", i+2)
-			colH := fmt.Sprintf("H%d", i+2)
-			colI := fmt.Sprintf("I%d", i+2)
+			rowNum := i + 2
+			no := i + 1
+			colA := fmt.Sprintf("A%d", rowNum)
+			colB := fmt.Sprintf("B%d", rowNum)
+			colC := fmt.Sprintf("C%d", rowNum)
+			colD := fmt.Sprintf("D%d", rowNum)
+			colE := fmt.Sprintf("E%d", rowNum)
+			colF := fmt.Sprintf("F%d", rowNum)
+			colG := fmt.Sprintf("G%d", rowNum)
+			colH := fmt.Sprintf("H%d", rowNum)
+			colI := fmt.Sprintf("I%d", rowNum)
+
 			var (
 				linkImageBefore string
 				linkImageAfter  string
 			)
 			if v.ImageBefore != nil {
-				linkImageBefore = "https://lh3.googleusercontent.com/d/" + *v.ImageBefore
+				imageBeforeFile, _ := general.SplitFileAndNameWithDelimiter(*v.ImageBefore)
+				linkImageBefore = "https://lh3.googleusercontent.com/d/" + imageBeforeFile
 			}
 			if v.ImageAfter != nil {
-				linkImageAfter = "https://lh3.googleusercontent.com/d/" + *v.ImageAfter
+				imageAfterFile, _ := general.SplitFileAndNameWithDelimiter(*v.ImageAfter)
+				linkImageAfter = "https://lh3.googleusercontent.com/d/" + imageAfterFile
 			}
-			no := i + 1
+
 			f.SetCellValue(sheet, colA, no)
-			f.SetCellValue(sheet, colB, v.User.Name)
-			f.SetCellValue(sheet, colC, v.Task.Name)
-			f.SetCellValue(sheet, colD, v.TaskType.Name)
-			f.SetCellValue(sheet, colE, v.Floor)
-			f.SetCellValue(sheet, colF, v.Info)
-			f.SetCellValue(sheet, colG, linkImageBefore)
-			f.SetCellValue(sheet, colH, linkImageAfter)
-			f.SetCellValue(sheet, colI, general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")))
+			maxLens[0] = len(fmt.Sprintf("%d", no))
+			values := []string{
+				v.User.Name,
+				v.Task.Name,
+				v.TaskType.Name,
+				v.Floor,
+				v.Info,
+				linkImageBefore,
+				linkImageAfter,
+				general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")),
+			}
+			cols := []string{colB, colC, colD, colE, colF, colG, colH, colI}
+
+			for j, val := range values {
+				col := cols[j]
+				if (j == 5 || j == 6) && val != "" {
+					f.SetCellValue(sheet, col, val)
+					f.SetCellHyperLink(sheet, col, val, "External")
+				} else {
+					f.SetCellValue(sheet, col, val)
+				}
+
+				if l := len([]rune(val)); l > maxLens[j+1] {
+					maxLens[j+1] = l
+				}
+			}
+		}
+
+		for i := 0; i < len(headers); i++ {
+			col := string(rune('A' + i))
+			width := float64(maxLens[i])*1.2 + 2
+			if width < 8 {
+				width = 8
+			}
+			if width > 60 {
+				width = 60
+			}
+			if err := f.SetColWidth(sheet, col, col, width); err != nil {
+				return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+			}
+		}
+
+		if err := f.AutoFilter(sheet, "B1:E1", nil); err != nil {
+			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
 		var buf bytes.Buffer
 		if err := f.Write(&buf); err != nil {
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
-		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx", strings.ReplaceAll(reportDate, "-", ""))
+
+		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx",
+			strings.ReplaceAll(reportDate, "-", ""))
 		return filename, &buf, "excel", nil
 	}
 }
