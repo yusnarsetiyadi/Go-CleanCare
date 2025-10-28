@@ -434,7 +434,7 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.WorkUpdateReques
 				allFileOld = append(allFileOld, imageBeforeFile)
 			}
 		} else {
-			if payload.DeleteImageBefore != nil && *payload.DeleteImageBefore == "yes" {
+			if payload.DeleteImageBefore != nil && *payload.DeleteImageBefore {
 				imageBeforeFile, _ := general.SplitFileAndNameWithDelimiter(*workData.ImageBefore)
 				errDel := gdrive.DeleteFile(s.sDrive, imageBeforeFile)
 				if errDel != nil {
@@ -473,7 +473,7 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.WorkUpdateReques
 				allFileOld = append(allFileOld, imageAfterFile)
 			}
 		} else {
-			if payload.DeleteImageAfter != nil && *payload.DeleteImageAfter == "yes" {
+			if payload.DeleteImageAfter != nil && *payload.DeleteImageAfter {
 				imageAfterFile, _ := general.SplitFileAndNameWithDelimiter(*workData.ImageAfter)
 				errDel := gdrive.DeleteFile(s.sDrive, imageAfterFile)
 				if errDel != nil {

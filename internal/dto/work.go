@@ -26,9 +26,9 @@ type WorkUpdateRequest struct {
 	Floor             *string `json:"floor" form:"floor"`
 	Info              *string `json:"info" form:"info"`
 	ImageBefore       []*multipart.FileHeader
-	DeleteImageBefore *string `json:"delete_image_before" form:"delete_image_before"`
+	DeleteImageBefore *bool `json:"delete_image_before" form:"delete_image_before"`
 	ImageAfter        []*multipart.FileHeader
-	DeleteImageAfter  *string `json:"delete_image_after" form:"delete_image_after"`
+	DeleteImageAfter  *bool `json:"delete_image_after" form:"delete_image_after"`
 }
 
 type WorkExportRequest struct {
