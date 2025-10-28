@@ -49,9 +49,10 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 	var res []map[string]interface{} = nil
 	for _, v := range data {
 		res = append(res, map[string]interface{}{
-			"id":      v.ID,
-			"name":    v.Name,
-			"task_id": v.TaskId,
+			"id":        v.ID,
+			"name":      v.Name,
+			"task_id":   v.Task.ID,
+			"task_name": v.Task.Name,
 		})
 	}
 	return map[string]interface{}{
