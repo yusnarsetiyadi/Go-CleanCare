@@ -530,10 +530,11 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 		pdf.AddPage()
 
 		pdf.SetFont("Arial", "B", 16)
-		pdf.Cell(0, 10, fmt.Sprintf(
-			"CleanCare - Laporan Pekerjaan Petugas Kebersihan (%s)",
-			general.ConvertDateToIndonesian(reportDate),
-		))
+		titlePdf := "CleanCare - Laporan Pekerjaan Petugas Kebersihan (all date)"
+		if reportDate != "" {
+			titlePdf = fmt.Sprintf("CleanCare - Laporan Pekerjaan Petugas Kebersihan (%s)", general.ConvertDateToIndonesian(reportDate))
+		}
+		pdf.Cell(0, 10, titlePdf)
 		pdf.Ln(12)
 		pdf.SetFont("Arial", "B", 10)
 		header := []string{
@@ -625,7 +626,10 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf", strings.ReplaceAll(reportDate, "-", ""))
+		filename := "CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf"
+		if reportDate != "" {
+			filename = fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.pdf", strings.ReplaceAll(reportDate, "-", ""))
+		}
 		return filename, &buf, "pdf", nil
 
 	} else {
@@ -731,8 +735,10 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.WorkExportReques
 			return "", nil, "", response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
 
-		filename := fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx",
-			strings.ReplaceAll(reportDate, "-", ""))
+		filename := "CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx"
+		if reportDate != "" {
+			filename = fmt.Sprintf("(%s) CleanCare - Laporan Pekerjaan Petugas Kebersihan.xlsx", strings.ReplaceAll(reportDate, "-", ""))
+		}
 		return filename, &buf, "excel", nil
 	}
 }
