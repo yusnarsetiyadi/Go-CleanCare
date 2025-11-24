@@ -21,7 +21,7 @@ import (
 )
 
 // @title cleancare
-// @version 1.0.0
+// @version 1.0.0.
 // @description This is a doc for cleancare
 
 func main() {
