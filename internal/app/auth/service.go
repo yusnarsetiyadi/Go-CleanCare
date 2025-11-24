@@ -134,7 +134,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 	if data.Profile != nil {
 		profile, err := gdrive.GetFile(s.sDrive, *data.Profile)
 		if err != nil {
-			return nil, response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "profile not found")
+			return nil, response.ErrorBuilder(http.StatusBadRequest, err, "profile not found")
 		}
 		dataReturn["profile"] = map[string]interface{}{
 			// "view_saved": general.ConvertLinkToFileSaved(profile.WebContentLink, profile.Name, profile.FileExtension),
