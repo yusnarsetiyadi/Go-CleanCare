@@ -18,6 +18,7 @@ type Work interface {
 	UpdateToNull(ctx *abstraction.Context, data *model.WorkEntityModel, column string) *gorm.DB
 	FindByTaskIdArrAdmin(ctx *abstraction.Context, task_id int, created_at string, no_paging bool) (floorSummary []*model.FloorSummary, userSummary []*model.UserSummary, errFloor, errUser error)
 	FindByTaskIdArrStaf(ctx *abstraction.Context, task_id int, created_at string, no_paging bool) (taskTypeSummary []*model.TaskTypeSummary, err error)
+	FindByUserIdTaskIdTaskTypeIdFloor(ctx *abstraction.Context, userId, taskId, taskTypeId int, floor string) (*model.WorkEntityModel, error)
 }
 
 type work struct {
@@ -139,4 +140,18 @@ func (r *work) FindByTaskIdArrStaf(ctx *abstraction.Context, task_id int, create
 		Scan(&taskTypeSummary).Error
 
 	return
+}
+
+func (r *work) FindByUserIdTaskIdTaskTypeIdFloor(ctx *abstraction.Context, userId, taskId, taskTypeId int, floor string) (*model.WorkEntityModel, error) {
+	conn := r.CheckTrx(ctx)
+
+	var data model.WorkEntityModel
+	err := conn.
+		Where("user_id = ? AND task_id = ? AND task_type_id = ? AND floor = ? AND DATE(created_at) = CURRENT_DATE AND is_delete = ?", userId, taskId, taskTypeId, floor, false).
+		First(&data).
+		Error
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
 }

@@ -362,6 +362,11 @@ func ProcessWhereParam(ctx *abstraction.Context, searchType string, whereStr str
 		whereParam["start_updated_at"] = valDate[0] + " 00:00:00"
 		whereParam["end_updated_at"] = valDate[1] + " 23:59:59"
 	}
+	if ctx.QueryParam("not_finished") != "" {
+		if ctx.QueryParam("not_finished") == "yes" {
+			where += " AND image_after IS NULL"
+		}
+	}
 
 	return where, whereParam
 }

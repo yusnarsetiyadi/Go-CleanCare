@@ -152,6 +152,15 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.WorkCreateReques
 				IsDelete:    false,
 			},
 		}
+
+		workExisting, err := s.WorkRepository.FindByUserIdTaskIdTaskTypeIdFloor(ctx, modelWork.UserId, modelWork.TaskId, modelWork.TaskTypeId, modelWork.Floor)
+		if err != nil && err.Error() != "record not found" {
+			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
+		}
+		if workExisting != nil {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "Data pekerjaan ini sudah pernah dibuat, coba lagi besok.")
+		}
+
 		if err = s.WorkRepository.Create(ctx, modelWork).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 		}
@@ -227,6 +236,12 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			}
 		}
 
+		// check is work done
+		isDone := false
+		if v.ImageAfter != nil {
+			isDone = true
+		}
+
 		// from user id
 		resUser := map[string]interface{}{
 			"id":           v.User.ID,
@@ -266,6 +281,7 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			"unread_comment": hasUnreadComment,
 			"created_at":     general.FormatWithZWithoutChangingTime(v.CreatedAt),
 			"updated_at":     general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
+			"is_done":        isDone,
 		}
 
 		res = append(res, resData)
