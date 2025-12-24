@@ -22,7 +22,7 @@ import (
 
 // @title cleancare
 // @version 1.0.1
-// @description This is a doc for cleancare
+// @description This is a doc for cleancare.
 
 func main() {
 	config.Init()
