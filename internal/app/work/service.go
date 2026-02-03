@@ -205,7 +205,7 @@ func (s *service) Delete(ctx *abstraction.Context, payload *dto.WorkDeleteByIDRe
 
 func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error) {
 	var res []map[string]interface{} = nil
-	data, err := s.WorkRepository.Find(ctx, false)
+	data, err := s.WorkRepository.Find(ctx, true)
 	if err != nil && err.Error() != "record not found" {
 		return nil, response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 	}
