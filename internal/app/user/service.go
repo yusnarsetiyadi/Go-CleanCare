@@ -86,6 +86,7 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.UserCreateReques
 				Name:     payload.Name,
 				RoleId:   payload.RoleId,
 				IsDelete: false,
+				Floor:    payload.Floor,
 			},
 		}
 		if err = s.UserRepository.Create(ctx, modelUser).Error; err != nil {
@@ -130,6 +131,7 @@ func (s *service) Find(ctx *abstraction.Context) (map[string]interface{}, error)
 			"updated_at":   general.FormatWithZWithoutChangingTime(*v.UpdatedAt),
 			"profile":      v.Profile,
 			"profile_name": v.ProfileName,
+			"floor":        v.Floor,
 			"role": map[string]interface{}{
 				"id":   v.Role.ID,
 				"name": v.Role.Name,
@@ -175,6 +177,7 @@ func (s *service) FindById(ctx *abstraction.Context, payload *dto.UserFindByIDRe
 			"updated_at":   general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 			"profile":      data.Profile,
 			"profile_name": data.ProfileName,
+			"floor":        data.Floor,
 			"role": map[string]interface{}{
 				"id":   data.Role.ID,
 				"name": data.Role.Name,
@@ -276,6 +279,9 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.UserUpdateReques
 					return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
 				}
 			}
+		}
+		if payload.Floor != nil {
+			newUserData.Floor = *payload.Floor
 		}
 		if err = s.UserRepository.Update(ctx, newUserData).Error; err != nil {
 			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")

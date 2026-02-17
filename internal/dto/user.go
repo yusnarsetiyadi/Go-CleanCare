@@ -6,6 +6,7 @@ type UserCreateRequest struct {
 	Name     string `json:"name" form:"name" validate:"required"`
 	NumberId string `json:"number_id" form:"number_id" validate:"required"`
 	RoleId   int    `json:"role_id" form:"role_id" validate:"required"`
+	Floor    string `json:"floor" form:"floor" validate:"required"`
 }
 
 type UserFindByIDRequest struct {
@@ -19,7 +20,8 @@ type UserUpdateRequest struct {
 	Email         *string `json:"email" form:"email"`
 	RoleId        *int    `json:"role_id" form:"role_id"`
 	Profile       []*multipart.FileHeader
-	DeleteProfile *bool `json:"delete_profile" form:"delete_profile"`
+	DeleteProfile *bool   `json:"delete_profile" form:"delete_profile"`
+	Floor         *string `json:"floor" form:"floor"`
 }
 
 type UserDeleteByIDRequest struct {

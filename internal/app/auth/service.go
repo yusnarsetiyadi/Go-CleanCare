@@ -125,6 +125,7 @@ func (s *service) Login(ctx *abstraction.Context, payload *dto.AuthLoginRequest)
 		"updated_at":   general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 		"profile":      data.Profile,
 		"profile_name": data.ProfileName,
+		"floor":        data.Floor,
 		"role": map[string]interface{}{
 			"id":   data.Role.ID,
 			"name": data.Role.Name,

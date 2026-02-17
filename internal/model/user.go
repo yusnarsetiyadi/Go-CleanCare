@@ -15,6 +15,7 @@ type UserEntity struct {
 	IsDelete    bool    `json:"is_delete"`
 	Profile     *string `json:"profile"`
 	ProfileName *string `json:"profile_name"`
+	Floor       string  `json:"floor"`
 }
 
 // UserEntityModel ...
