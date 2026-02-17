@@ -3,7 +3,6 @@ package dto
 import "mime/multipart"
 
 type WorkCreateRequest struct {
-	UserId      int    `json:"user_id" form:"user_id" validate:"required"`
 	TaskId      int    `json:"task_id" form:"task_id" validate:"required"`
 	TaskTypeId  int    `json:"task_type_id" form:"task_type_id" validate:"required"`
 	Floor       string `json:"floor" form:"floor" validate:"required"`
@@ -22,7 +21,6 @@ type WorkFindByIDRequest struct {
 
 type WorkUpdateRequest struct {
 	ID                int     `param:"id" validate:"required"`
-	UserId            *int    `json:"user_id" form:"user_id"`
 	TaskId            *int    `json:"task_id" form:"task_id"`
 	TaskTypeId        *int    `json:"task_type_id" form:"task_type_id"`
 	Floor             *string `json:"floor" form:"floor"`

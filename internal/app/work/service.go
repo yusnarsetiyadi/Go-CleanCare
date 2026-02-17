@@ -43,7 +43,6 @@ type service struct {
 	TaskTypeRepository repository.TaskType
 	WorkRepository     repository.Work
 	CommentReposiory   repository.Comment
-	UserRepository     repository.User
 
 	DB      *gorm.DB
 	DbRedis *redis.Client
@@ -57,7 +56,6 @@ func NewService(f *factory.Factory) Service {
 		TaskTypeRepository: f.TaskTypeRepository,
 		WorkRepository:     f.WorkRepository,
 		CommentReposiory:   f.CommentRepository,
-		UserRepository:     f.UserRepository,
 
 		DB:      f.Db,
 		DbRedis: f.DbRedis,
@@ -73,16 +71,8 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.WorkCreateReques
 		imageAfter      *string
 	)
 	if err := trxmanager.New(s.DB).WithTrx(ctx, func(ctx *abstraction.Context) error {
-		// if ctx.Auth.RoleID != constant.ROLE_ID_STAFF {
-		// 	return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
-		// }
-
-		userData, err := s.UserRepository.FindById(ctx, payload.UserId)
-		if err != nil && err.Error() != "record not found" {
-			return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-		}
-		if userData == nil {
-			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "user not found")
+		if ctx.Auth.RoleID != constant.ROLE_ID_STAFF {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
 		}
 
 		taskData, err := s.TaskRepository.FindById(ctx, payload.TaskId)
@@ -152,7 +142,7 @@ func (s *service) Create(ctx *abstraction.Context, payload *dto.WorkCreateReques
 		modelWork := &model.WorkEntityModel{
 			Context: ctx,
 			WorkEntity: model.WorkEntity{
-				UserId:      payload.UserId,
+				UserId:      ctx.Auth.ID,
 				TaskId:      payload.TaskId,
 				TaskTypeId:  payload.TaskTypeId,
 				Floor:       payload.Floor,
@@ -191,9 +181,9 @@ func (s *service) Delete(ctx *abstraction.Context, payload *dto.WorkDeleteByIDRe
 			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "work not found")
 		}
 
-		// if ctx.Auth.ID != workData.UserId {
-		// 	return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
-		// }
+		if ctx.Auth.ID != workData.UserId {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
+		}
 
 		newWorkData := new(model.WorkEntityModel)
 		newWorkData.Context = ctx
@@ -390,23 +380,13 @@ func (s *service) Update(ctx *abstraction.Context, payload *dto.WorkUpdateReques
 			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "work not found")
 		}
 
-		// if ctx.Auth.ID != workData.UserId {
-		// 	return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
-		// }
+		if ctx.Auth.ID != workData.UserId {
+			return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "this role is not permitted")
+		}
 
 		newWorkData := new(model.WorkEntityModel)
 		newWorkData.Context = ctx
 		newWorkData.ID = payload.ID
-		if payload.UserId != nil {
-			userData, err := s.UserRepository.FindById(ctx, *payload.UserId)
-			if err != nil && err.Error() != "record not found" {
-				return response.ErrorBuilder(http.StatusInternalServerError, err, "server_error")
-			}
-			if userData == nil {
-				return response.ErrorBuilder(http.StatusBadRequest, errors.New("bad_request"), "user id not found")
-			}
-			newWorkData.UserId = *payload.UserId
-		}
 		if payload.TaskId != nil {
 			taskData, err := s.TaskRepository.FindById(ctx, *payload.TaskId)
 			if err != nil && err.Error() != "record not found" {
