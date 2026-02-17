@@ -347,6 +347,7 @@ func (s *service) VerifyNumber(ctx *abstraction.Context, payload *dto.AuthVerify
 		"id":         data.ID,
 		"number_id":  data.NumberId,
 		"name":       data.Name,
+		"floor":      data.Floor,
 		"created_at": general.FormatWithZWithoutChangingTime(data.CreatedAt),
 		"updated_at": general.FormatWithZWithoutChangingTime(*data.UpdatedAt),
 		"role": map[string]interface{}{
