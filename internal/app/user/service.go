@@ -409,15 +409,16 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		pdf := gofpdf.New("L", "mm", "A4", "")
 		pdf.SetMargins(10, 10, 10)
 		pdf.AddPage()
+		pdf.SetAutoPageBreak(true, 10)
 		pdf.SetFont("Arial", "B", 16)
 		pdf.Cell(0, 10, "CleanCare - Laporan Data Pengguna")
 		pdf.Ln(12)
 		pdf.SetFont("Arial", "B", 10)
 		header := []string{
 			"No", "Nomor ID", "Nama", "Email",
-			"Jabatan", "Tanggal Terdaftar", "Status Verifikasi",
+			"Jabatan", "Tanggal Terdaftar", "Status Verifikasi", "Penempatan",
 		}
-		colWidths := []float64{10, 35, 40, 50, 40, 60, 42}
+		colWidths := []float64{8, 30, 38, 48, 35, 55, 30, 33}
 		for i, str := range header {
 			pdf.CellFormat(colWidths[i], 8, str, "1", 0, "C", false, 0, "")
 		}
@@ -429,6 +430,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 			email := "-"
 			role := ""
 			verified := "Belum"
+			floor := "-"
 
 			if v.Email != nil {
 				email = *v.Email
@@ -441,6 +443,10 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 				role = "Supervisor"
 			}
 
+			if v.Floor != "" {
+				floor = v.Floor
+			}
+
 			row := []string{
 				no,
 				v.NumberId,
@@ -449,6 +455,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 				role,
 				general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05")),
 				verified,
+				floor,
 			}
 			startY := pdf.GetY()
 			startX := pdf.GetX()
@@ -459,6 +466,16 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 				if h > maxHeight {
 					maxHeight = h
 				}
+			}
+
+			if pdf.GetY()+maxHeight > 190 {
+				pdf.AddPage()
+				pdf.SetFont("Arial", "B", 10)
+				for i, str := range header {
+					pdf.CellFormat(colWidths[i], 8, str, "1", 0, "C", false, 0, "")
+				}
+				pdf.Ln(-1)
+				pdf.SetFont("Arial", "", 9)
 			}
 
 			for j, txt := range row {
@@ -490,7 +507,7 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 		f.DeleteSheet("Sheet1")
 		f.SetActiveSheet(index)
 
-		headers := []string{"No", "Nomor ID", "Nama", "Email", "Jabatan", "Tanggal Terdaftar", "Status Verifikasi"}
+		headers := []string{"No", "Nomor ID", "Nama", "Email", "Jabatan", "Tanggal Terdaftar", "Status Verifikasi", "Penempatan"}
 		for i, h := range headers {
 			col := string(rune('A' + i))
 			cell := fmt.Sprintf("%s1", col)
@@ -521,6 +538,12 @@ func (s *service) Export(ctx *abstraction.Context, payload *dto.UserExportReques
 				values[4] = "Petugas Kebersihan"
 			} else {
 				values[4] = "Supervisor"
+			}
+
+			if v.Floor == "" {
+				values[7] = "-"
+			} else {
+				values[7] = v.Floor
 			}
 
 			values[5] = general.ConvertDateTimeToIndonesian(v.CreatedAt.Format("2006-01-02 15:04:05"))
